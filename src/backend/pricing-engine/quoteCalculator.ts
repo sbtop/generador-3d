@@ -75,9 +75,6 @@ const LABOR_HOURS: Record<GlassType, number> = {
     ventana: 2.0,
 };
 
-const LABOR_HOUR_RATE = 280; // MXN por hora
-const TAX_RATE = 0.16;       // IVA México
-
 // ─── Generador de lista de herrajes ───────────────────────────────────────
 
 export function generateHardwareList(
@@ -150,14 +147,14 @@ export function calculateQuote(
     const hardwareCost = hardware.reduce((sum, h) => sum + h.unitPrice * h.quantity, 0);
 
     const laborHours = LABOR_HOURS[glassType];
-    const laborRate = customLaborRate ?? LABOR_HOUR_RATE;
+    const laborRate = customLaborRate ?? config.laborRate;
     const laborCost = Math.round((laborHours * laborRate) + config.installationBase);
 
     // Aplicar margen
     const baseCost = glassCost + hardwareCost + laborCost;
     const subtotal = Math.round(baseCost * (1 + (config.profitMargin / 100)));
 
-    const tax = Math.round(subtotal * TAX_RATE);
+    const tax = Math.round(subtotal * (config.taxRate / 100));
     const total = subtotal + tax;
 
     return {

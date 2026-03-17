@@ -18,7 +18,23 @@ export interface PricingConfig {
     hwClip: number;
     hwSellador: number;
     installationBase: number;
+    laborRate: number;
+    taxRate: number;
     profitMargin: number;
+}
+
+export interface UserPreferences {
+    measureUnits: 'mm' | 'm' | 'in';
+    measureMethod: 'Centreline Glass' | 'Opening Size';
+    defaultDoorWidth: number;
+    doorActions: string;
+    hingePositioning: string;
+    glassCoatings: string;
+    frameTypes: string;
+    hardwareFinishes: string;
+    headerOptions: string;
+    handleStyles: string;
+    fixingStyles: string;
 }
 
 export interface Client {
@@ -72,6 +88,7 @@ export interface AppState {
     hardware: HardwareItem[];
     quote: QuoteResult;
     alerts: SafetyAlert[];
+    preferences: UserPreferences;
 }
 
 type Action =
@@ -92,7 +109,8 @@ type Action =
     | { type: 'SET_FINISH'; payload: HardwareFinish }
     | { type: 'SET_VANO'; payload: { vanoWidth?: number; vanoHeight?: number } }
     | { type: 'UPDATE_PRICING_CONFIG'; payload: PricingConfig }
-    | { type: 'INIT_STORAGE'; payload: { clients: Client[], savedProjects: SavedProject[], pricing: PricingConfig | null } };
+    | { type: 'UPDATE_PREFERENCES'; payload: Partial<UserPreferences> }
+    | { type: 'INIT_STORAGE'; payload: { clients: Client[], savedProjects: SavedProject[], pricing: PricingConfig | null, preferences: UserPreferences | null } };
 
 function recompute(state: AppState): AppState {
     const metrics = calculateGlass(state.glassType, state.vanoWidth, state.vanoHeight, state.thickness);
@@ -112,7 +130,23 @@ const defaultPricingConfig: PricingConfig = {
     hwClip: 80,
     hwSellador: 85,
     installationBase: 1500,
+    laborRate: 280,
+    taxRate: 16,
     profitMargin: 35,
+};
+
+const defaultPreferences: UserPreferences = {
+    measureUnits: 'mm',
+    measureMethod: 'Centreline Glass',
+    defaultDoorWidth: 600,
+    doorActions: 'Continuous Hinged',
+    hingePositioning: 'Flush with wall',
+    glassCoatings: 'None',
+    frameTypes: 'Frameless',
+    hardwareFinishes: 'Chrome',
+    headerOptions: 'None',
+    handleStyles: 'C-Pull',
+    fixingStyles: 'None'
 };
 
 const initialVano = { vanoWidth: 900, vanoHeight: 1800 };
@@ -143,6 +177,7 @@ const initialState: AppState = {
     hardware: initialHardware,
     quote: initialQuote,
     alerts: initialAlerts,
+    preferences: defaultPreferences
 };
 
 function generateId() {
@@ -156,7 +191,8 @@ function reducer(state: AppState, action: Action): AppState {
                 ...state,
                 clients: action.payload.clients,
                 savedProjects: action.payload.savedProjects,
-                pricingConfig: action.payload.pricing || defaultPricingConfig
+                pricingConfig: action.payload.pricing || defaultPricingConfig,
+                preferences: action.payload.preferences || defaultPreferences
             });
         }
         case 'SET_MODULE':
@@ -250,6 +286,11 @@ function reducer(state: AppState, action: Action): AppState {
         case 'SET_FINISH': return recompute({ ...state, finish: action.payload });
         case 'SET_VANO': return recompute({ ...state, ...action.payload });
         case 'UPDATE_PRICING_CONFIG': return recompute({ ...state, pricingConfig: action.payload });
+        case 'UPDATE_PREFERENCES': {
+            const preferences = { ...state.preferences, ...action.payload };
+            localStorage.setItem('glasspro_preferences', JSON.stringify(preferences));
+            return { ...state, preferences };
+        }
 
         default: return state;
     }
@@ -275,13 +316,16 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
                 payload: {
                     clients: storedClients ? JSON.parse(storedClients) : [],
                     savedProjects: storedProjects ? JSON.parse(storedProjects) : [],
-                    pricing: storedPricing ? JSON.parse(storedPricing) : null
+                    pricing: storedPricing ? JSON.parse(storedPricing) : null,
+                    preferences: storedPrefs ? JSON.parse(storedPrefs) : null
                 }
             });
         } catch (e) {
             console.error('Failed to load local storage', e);
         }
     }, []);
+
+    const storedPrefs = localStorage.getItem('glasspro_preferences');
 
     // Guardar localStorage tras cada cambio de colecciones
     useEffect(() => {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useProject } from '../../store/projectStore';
 
 export function PriceSettings() {
-    const { dispatch } = useProject();
+    const { state, dispatch } = useProject();
 
     // Estado local para los inputs del formulario
     const [prices, setPrices] = useState({
@@ -15,6 +15,8 @@ export function PriceSettings() {
         hwClip: 0,
         hwSellador: 0,
         installationBase: 0,
+        laborRate: 0,
+        taxRate: 0,
         profitMargin: 0,
     });
 
@@ -26,7 +28,8 @@ export function PriceSettings() {
     useEffect(() => {
         const stored = localStorage.getItem('glasspro_pricing');
         if (stored) {
-            setPrices(JSON.parse(stored));
+            const parsed = JSON.parse(stored);
+            setPrices(prev => ({ ...prev, ...parsed }));
         } else {
             // Valores por defecto
             setPrices({
@@ -39,6 +42,8 @@ export function PriceSettings() {
                 hwClip: 80,
                 hwSellador: 85,
                 installationBase: 1500,
+                laborRate: 280,
+                taxRate: 16,
                 profitMargin: 35, // Porcentaje
             });
         }
@@ -121,15 +126,133 @@ export function PriceSettings() {
                             <input type="number" name="installationBase" className="input-field-text" value={prices.installationBase} onChange={handleChange} />
                         </div>
                         <div className="input-group">
+                            <label className="input-label">Mano de Obra (Costo/Hora)</label>
+                            <input type="number" name="laborRate" className="input-field-text" value={prices.laborRate} onChange={handleChange} />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Impuesto / IVA (%)</label>
+                            <input type="number" name="taxRate" className="input-field-text" value={prices.taxRate} onChange={handleChange} />
+                        </div>
+                        <div className="input-group">
                             <label className="input-label">Margen de Ganancia (%)</label>
                             <input type="number" name="profitMargin" className="input-field-text" value={prices.profitMargin} onChange={handleChange} />
                         </div>
                     </div>
                 </section>
 
+                <section className="section form-section">
+                    <h3 className="section__title" style={{ color: 'var(--brand-orange)' }}>🚿 Opciones de Ducha (Shower Options)</h3>
+                    <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+                        <div className="input-group">
+                            <label className="input-label">Unidades de Medida</label>
+                            <select
+                                className="input-field-text"
+                                value={state.preferences.measureUnits}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { measureUnits: e.target.value as any } })}
+                            >
+                                <option value="mm">Metric (mm)</option>
+                                <option value="m">Metric (m)</option>
+                                <option value="in">Imperial (in)</option>
+                            </select>
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Método de Medida</label>
+                            <select
+                                className="input-field-text"
+                                value={state.preferences.measureMethod}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { measureMethod: e.target.value as any } })}
+                            >
+                                <option value="Centreline Glass">Centreline Glass</option>
+                                <option value="Opening Size">Opening Size</option>
+                            </select>
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Ancho de Puerta x Defecto (mm)</label>
+                            <input
+                                type="number"
+                                className="input-field-text"
+                                value={state.preferences.defaultDoorWidth}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { defaultDoorWidth: Number(e.target.value) } })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Acciones de Puerta</label>
+                            <input
+                                type="text"
+                                className="input-field-text"
+                                value={state.preferences.doorActions}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { doorActions: e.target.value } })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Posicionamiento de Bisagra</label>
+                            <input
+                                type="text"
+                                className="input-field-text"
+                                value={state.preferences.hingePositioning}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { hingePositioning: e.target.value } })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Tratamientos de Vidrio (Coatings)</label>
+                            <input
+                                type="text"
+                                className="input-field-text"
+                                value={state.preferences.glassCoatings}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { glassCoatings: e.target.value } })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Tipos de Marco</label>
+                            <input
+                                type="text"
+                                className="input-field-text"
+                                value={state.preferences.frameTypes}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { frameTypes: e.target.value } })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Acabados de Herrajes</label>
+                            <input
+                                type="text"
+                                className="input-field-text"
+                                value={state.preferences.hardwareFinishes}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { hardwareFinishes: e.target.value } })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Opciones de Cabezal (Header)</label>
+                            <input
+                                type="text"
+                                className="input-field-text"
+                                value={state.preferences.headerOptions}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { headerOptions: e.target.value } })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Estilos de Jalón (Handle)</label>
+                            <input
+                                type="text"
+                                className="input-field-text"
+                                value={state.preferences.handleStyles}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { handleStyles: e.target.value } })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label className="input-label">Estilos de Fijación</label>
+                            <input
+                                type="text"
+                                className="input-field-text"
+                                value={state.preferences.fixingStyles}
+                                onChange={(e) => dispatch({ type: 'UPDATE_PREFERENCES', payload: { fixingStyles: e.target.value } })}
+                            />
+                        </div>
+                    </div>
+                </section>
+
                 <div className="form-actions" style={{ marginTop: '1rem', justifyContent: 'flex-start' }}>
                     <button className="btn-primary" onClick={handleSave}>Guardar Configuración</button>
-                    {saved && <span style={{ color: 'var(--brand-green)', fontWeight: 600 }}>✅ Guardado con éxito</span>}
+                    {saved && <span style={{ color: 'var(--brand-green)', fontWeight: 600 }}>✅ Precios guardados</span>}
                 </div>
             </div>
         </div>

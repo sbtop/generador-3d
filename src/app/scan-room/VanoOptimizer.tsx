@@ -99,7 +99,7 @@ export function VanoOptimizer() {
                 {/* Medidas de vano */}
                 <section className="section">
                     <div className="section-header-flex">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                             <h3 className="section__title" style={{ marginBottom: 0 }}>Medidas del Vano ({unit})</h3>
                             <div className="unit-toggle" style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', overflow: 'hidden' }}>
                                 <button
