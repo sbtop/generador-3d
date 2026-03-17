@@ -4,17 +4,97 @@ import { ARScannerModal } from './ARScannerModal';
 import { GlassType, GlassThickness, ShowerConfig } from '../../backend/pricing-engine/glassCalculator';
 import { SafetyAlert } from '../../backend/pricing-engine/safetyValidator';
 
-const GLASS_TYPES: { id: GlassType; label: string; icon: string; desc: string }[] = [
-    { id: 'batiente', label: 'Puerta Batiente', icon: '🚪', desc: 'Gira en bisagras — Duchas y baños' },
-    { id: 'corrediza', label: 'Puerta Corrediza', icon: '↔️', desc: 'Desliza en riel superior' },
-    { id: 'ventana', label: 'Ventana / Fijo', icon: '🪟', desc: 'Panel fijo con sellado perimetral' },
+function ShowerTypeIcon({ id }: { id: GlassType }) {
+    const stroke = 'currentColor';
+    if (id === 'batiente') {
+        return (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" strokeOpacity="0.3" />
+                <path d="M3 3v18h12V3H3z" fill="rgba(59, 130, 246, 0.1)" />
+                <circle cx="12" cy="12" r="1" fill={stroke} />
+                <path d="M15 3l6 2v14l-6 2" />
+            </svg>
+        );
+    }
+    if (id === 'corrediza') {
+        return (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" strokeOpacity="0.3" />
+                <path d="M4 4h8v16H4V4z" fill="rgba(59, 130, 246, 0.1)" />
+                <path d="M12 4h8v16h-8V4z" fill="rgba(59, 130, 246, 0.05)" />
+                <path d="M7 10l-2 2 2 2M17 10l2 2-2 2" />
+            </svg>
+        );
+    }
+    return (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" strokeOpacity="0.3" />
+            <rect x="5" y="5" width="14" height="14" rx="1" fill="rgba(59, 130, 246, 0.1)" />
+            <path d="M5 12h14M12 5v14" strokeOpacity="0.2" />
+        </svg>
+    );
+}
+
+function ShowerTemplateIcon({ id }: { id: ShowerConfig }) {
+    const stroke = 'currentColor';
+    const fill = 'rgba(59, 130, 246, 0.15)';
+    const handle = 'currentColor';
+
+    if (id === 'single') {
+        return (
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={stroke} strokeWidth="1.2">
+                <rect x="14" y="8" width="20" height="32" fill={fill} />
+                <circle cx="30" cy="24" r="1.5" fill={handle} stroke="none" />
+                <line x1="14" y1="12" x2="14" y2="16" strokeWidth="2.5" />
+                <line x1="14" y1="32" x2="14" y2="36" strokeWidth="2.5" />
+            </svg>
+        );
+    }
+    if (id === 'door-panel') {
+        return (
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={stroke} strokeWidth="1.2">
+                <rect x="8" y="8" width="16" height="32" fill={fill} />
+                <rect x="24" y="8" width="16" height="32" fill="none" strokeOpacity="0.5" />
+                <circle cx="21" cy="24" r="1.5" fill={handle} stroke="none" />
+                <line x1="8" y1="12" x2="8" y2="16" strokeWidth="2.5" />
+                <line x1="8" y1="32" x2="8" y2="36" strokeWidth="2.5" />
+            </svg>
+        );
+    }
+    if (id === 'panel-door') {
+        return (
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={stroke} strokeWidth="1.2">
+                <rect x="8" y="8" width="16" height="32" fill="none" strokeOpacity="0.5" />
+                <rect x="24" y="8" width="16" height="32" fill={fill} />
+                <circle cx="27" cy="24" r="1.5" fill={handle} stroke="none" />
+                <line x1="40" y1="12" x2="40" y2="16" strokeWidth="2.5" />
+                <line x1="40" y1="32" x2="40" y2="36" strokeWidth="2.5" />
+            </svg>
+        );
+    }
+    return (
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke={stroke} strokeWidth="1.2">
+            <rect x="6" y="8" width="10" height="32" fill="none" strokeOpacity="0.5" />
+            <rect x="16" y="8" width="16" height="32" fill={fill} />
+            <rect x="32" y="8" width="10" height="32" fill="none" strokeOpacity="0.5" />
+            <circle cx="29" cy="24" r="1.5" fill={handle} stroke="none" />
+            <line x1="16" y1="12" x2="16" y2="16" strokeWidth="2.5" />
+            <line x1="16" y1="32" x2="16" y2="36" strokeWidth="2.5" />
+        </svg>
+    );
+}
+
+const GLASS_TYPES: { id: GlassType; label: string; icon: React.ReactNode; desc: string }[] = [
+    { id: 'batiente', label: 'Puerta Batiente', icon: <ShowerTypeIcon id="batiente" />, desc: 'Gira en bisagras — Duchas y baños' },
+    { id: 'corrediza', label: 'Puerta Corrediza', icon: <ShowerTypeIcon id="corrediza" />, desc: 'Desliza en riel superior' },
+    { id: 'ventana', label: 'Ventana / Fijo', icon: <ShowerTypeIcon id="ventana" />, desc: 'Panel fijo con sellado perimetral' },
 ];
 
-const SHOWER_TEMPLATES: { id: ShowerConfig; label: string; icon: string }[] = [
-    { id: 'single', label: 'Puerta Sola', icon: '🚪' },
-    { id: 'door-panel', label: 'Puerta + Fijo Der', icon: '🚪|' },
-    { id: 'panel-door', label: 'Fijo Izq + Puerta', icon: '|🚪' },
-    { id: 'panel-door-panel', label: 'Fijo + Puerta + Fijo', icon: '|🚪|' },
+const SHOWER_TEMPLATES: { id: ShowerConfig; label: string; icon: React.ReactNode }[] = [
+    { id: 'single', label: 'Puerta Sola', icon: <ShowerTemplateIcon id="single" /> },
+    { id: 'door-panel', label: 'Puerta + Fijo Der', icon: <ShowerTemplateIcon id="door-panel" /> },
+    { id: 'panel-door', label: 'Fijo Izq + Puerta', icon: <ShowerTemplateIcon id="panel-door" /> },
+    { id: 'panel-door-panel', label: 'Fijo + Puerta + Fijo', icon: <ShowerTemplateIcon id="panel-door-panel" /> },
 ];
 
 const THICKNESSES: { val: GlassThickness; label: string; rec: string }[] = [

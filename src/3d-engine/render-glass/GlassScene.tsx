@@ -34,7 +34,7 @@ function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, ha
 
     // Lógica de animación reactiva al prop "isOpen"
     const { rotationY, positionX } = useSpring({
-        rotationY: isMovable && glassType === 'batiente' && isOpen ? -Math.PI / 2.2 : 0,
+        rotationY: isMovable && glassType === 'batiente' && isOpen ? Math.PI / 2.2 : 0,
         positionX: isMovable && glassType === 'corrediza' && isOpen ? offsetX - w * 0.95 : offsetX,
         config: { mass: 2, tension: 170, friction: 26 }
     });
@@ -96,8 +96,8 @@ function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, ha
                 {panel.barrenos
                     .filter((b: any) => b.description.toLowerCase().includes('bisagra'))
                     .map((b: any, i: number) => (
-                        <mesh key={i} position={[-w / 2 - 0.025, b.y / 1000 - h / 2, 0]}>
-                            <cylinderGeometry args={[0.012, 0.012, 0.08, 12]} />
+                        <mesh key={i} position={[-w / 2 - 0.015, b.y / 1000 - h / 2, 0.025]}>
+                            <cylinderGeometry args={[0.012, 0.012, 0.06, 12]} />
                             <meshStandardMaterial color={hardwareColor} metalness={hardwareMetalness} roughness={0.15} />
                         </mesh>
                     ))
