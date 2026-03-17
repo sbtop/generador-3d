@@ -1,8 +1,22 @@
+import { useState } from 'react';
 import { useProject } from '../../store/projectStore';
 
 export function Header() {
     const { state, dispatch } = useProject();
     const errorAlerts = state.alerts.filter(a => a.severity === 'error').length;
+
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+
+    const handleSave = () => {
+        setSaveStatus('saving');
+        dispatch({ type: 'SAVE_CURRENT_PROJECT' });
+
+        // Simular feedback visual para confirmar que se persistió
+        setTimeout(() => {
+            setSaveStatus('success');
+            setTimeout(() => setSaveStatus('idle'), 1500);
+        }, 300);
+    };
 
     // Si no estamos en el flujo de proyecto, mostramos un header más simple
     if (state.activeModule === 'home' || state.activeModule === 'clients' || state.activeModule === 'settings') {
@@ -50,10 +64,22 @@ export function Header() {
 
             <div className="header__right">
                 <button
-                    onClick={() => dispatch({ type: 'SAVE_CURRENT_PROJECT' })}
-                    style={{ background: 'var(--brand-green)', color: 'white', border: 'none', padding: '6px 16px', borderRadius: '20px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)' }}
+                    onClick={handleSave}
+                    disabled={saveStatus !== 'idle'}
+                    style={{
+                        background: saveStatus === 'success' ? 'var(--brand-blue)' : 'var(--brand-green)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 16px',
+                        borderRadius: '20px',
+                        fontWeight: 700,
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 10px rgba(16, 185, 129, 0.3)',
+                        transition: 'all 0.3s ease'
+                    }}
                 >
-                    💾 Guardar Proyecto
+                    {saveStatus === 'saving' ? '⏳ Guardando...' : saveStatus === 'success' ? '✅ Guardado' : '💾 Guardar Proyecto'}
                 </button>
 
                 {errorAlerts > 0 && (

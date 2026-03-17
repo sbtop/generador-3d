@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useProject } from '../../store/projectStore';
 import { jsPDF } from 'jspdf';
 
@@ -252,6 +253,23 @@ function generateWhatsApp(state: ReturnType<typeof useProject>['state']): string
 
 export function OrderGenerator() {
     const { state } = useProject();
+    const [pdfStatus, setPdfStatus] = useState<'idle' | 'generating' | 'success' | 'error'>('idle');
+
+    const handlePDF = async () => {
+        setPdfStatus('generating');
+        try {
+            // Un pequeño respiro para que el UI muestre el estado de carga
+            await new Promise(resolve => setTimeout(resolve, 500));
+            generatePDF(state);
+            setPdfStatus('success');
+            setTimeout(() => setPdfStatus('idle'), 2000);
+        } catch (err) {
+            console.error('PDF Generation failed:', err);
+            setPdfStatus('error');
+            alert('Error al generar el PDF. Si estás en móvil, asegúrate de permitir las descargas.');
+            setTimeout(() => setPdfStatus('idle'), 3000);
+        }
+    };
 
     return (
         <div className="module">
@@ -346,9 +364,10 @@ export function OrderGenerator() {
                     <div className="actions-grid">
                         <button
                             className="action-btn action-btn--primary"
-                            onClick={() => generatePDF(state)}
+                            onClick={handlePDF}
+                            disabled={pdfStatus !== 'idle'}
                         >
-                            📄 Generar PDF
+                            {pdfStatus === 'generating' ? '⏳ Generando...' : pdfStatus === 'success' ? '✅ ¡Listo!' : pdfStatus === 'error' ? '❌ Error' : '📄 Generar PDF'}
                             <span className="action-btn__sub">Orden de corte completa</span>
                         </button>
                         <a
