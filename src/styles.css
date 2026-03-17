@@ -537,6 +537,23 @@ body {
     gap: var(--spacing-sm);
     padding: var(--spacing-md);
   }
+
+  .configurator-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    gap: var(--spacing-lg);
+  }
+
+  .configurator-3d {
+    min-height: 400px;
+    height: 400px;
+    grid-row: 1;
+    /* Place 3D view at the top on mobile so it's the first thing seen */
+  }
+
+  .configurator-controls {
+    grid-row: 2;
+  }
 }
 
 /* ─── Modules Layout ────────────────────────────────────────────────────── */
