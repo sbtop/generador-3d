@@ -10,17 +10,31 @@ export function ClientManager() {
     const [isEditing, setIsEditing] = useState(false);
 
     const [form, setForm] = useState<Partial<Client>>({});
+    const [status, setStatus] = useState<'idle' | 'saving' | 'success'>('idle');
 
     const handleSave = () => {
-        if (!form.name || !form.phone) return;
-
-        if (form.id) {
-            dispatch({ type: 'UPDATE_CLIENT', payload: form as Client });
-        } else {
-            dispatch({ type: 'ADD_CLIENT', payload: { ...form, id: generateId() } as Client });
+        if (!form.name || !form.phone) {
+            alert('Por favor completa los campos obligatorios (*)');
+            return;
         }
-        setIsEditing(false);
-        setForm({});
+
+        setStatus('saving');
+
+        // Simular un pequeño delay para feedback visual
+        setTimeout(() => {
+            if (form.id) {
+                dispatch({ type: 'UPDATE_CLIENT', payload: form as Client });
+            } else {
+                dispatch({ type: 'ADD_CLIENT', payload: { ...form, id: generateId() } as Client });
+            }
+            setStatus('success');
+
+            setTimeout(() => {
+                setIsEditing(false);
+                setForm({});
+                setStatus('idle');
+            }, 800);
+        }, 400);
     };
 
     const handleEdit = (client: Client) => {
@@ -40,15 +54,15 @@ export function ClientManager() {
     };
 
     return (
-        <div className="module module-clients">
-            <div className="module__header section-header-flex">
+        <div className="module module-clients" style={{ padding: '0 var(--spacing-md)' }}>
+            <div className="module__header section-header-flex" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
                 <div>
                     <h2 className="module__title">👥 Directorio de Clientes</h2>
                     <p className="module__subtitle">Gestiona tus clientes frecuentes y empresas asociadas.</p>
                 </div>
                 {!isEditing && (
-                    <button className="btn-hero btn-hero--green" onClick={handleNew} style={{ maxWidth: '240px', padding: '1rem' }}>
-                        <span className="btn-hero__icon" style={{ fontSize: '2rem' }}>👤</span>
+                    <button className="btn-hero btn-hero--green" onClick={handleNew} style={{ alignSelf: 'stretch', justifyContent: 'center', padding: '1.2rem' }}>
+                        <span className="btn-hero__icon" style={{ fontSize: '1.5rem' }}>➕</span>
                         <span>NUEVO CLIENTE</span>
                     </button>
                 )}
@@ -56,57 +70,64 @@ export function ClientManager() {
 
             <div className="module__body">
                 {isEditing ? (
-                    <section className="section form-section" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-                        <h3 className="section__title" style={{ fontSize: '1.4rem', borderBottom: '1px solid var(--panel-border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-                            {form.id ? '✏️ Editar Ficha de Cliente' : '✨ Nuevo Cliente Profesional'}
+                    <section className="section form-section" style={{ maxWidth: '800px', margin: '0 auto', width: '100%', padding: '1.5rem' }}>
+                        <h3 className="section__title" style={{ fontSize: '1.2rem', borderBottom: '1px solid var(--panel-border)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+                            {form.id ? '✏️ Editar Ficha' : '✨ Nueva Ficha de Cliente'}
                         </h3>
-                        <div className="form-grid" style={{ gridTemplateColumns: 'minmax(0, 1fr)', gap: '1.5rem' }}>
+                        <div className="form-grid" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                             <div className="input-group">
-                                <label className="input-label" style={{ fontSize: '1rem' }}>NOMBRE O REPRESENTANTE *</label>
+                                <label className="input-label" style={{ fontSize: '0.8rem', color: form.name ? 'var(--brand-blue)' : 'var(--brand-red)' }}>
+                                    NOMBRE O REPRESENTANTE {!form.name && '*'}
+                                </label>
                                 <input className="input-field-text" placeholder="Ej. Juan Pérez" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} />
                             </div>
+
                             <div className="input-group">
-                                <label className="input-label" style={{ fontSize: '1rem' }}>EMPRESA O CONSTRUCTORA</label>
-                                <input className="input-field-text" placeholder="Opcional. Ej. Constructora Vértice S.A." value={form.company || ''} onChange={e => setForm({ ...form, company: e.target.value })} />
+                                <label className="input-label" style={{ fontSize: '0.8rem' }}>EMPRESA O CONSTRUCTORA</label>
+                                <input className="input-field-text" placeholder="Opcional" value={form.company || ''} onChange={e => setForm({ ...form, company: e.target.value })} />
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
                                 <div className="input-group">
-                                    <label className="input-label" style={{ fontSize: '1rem' }}>TELÉFONO *</label>
-                                    <input className="input-field-text" placeholder="Ej. 555-0198" value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                                    <label className="input-label" style={{ fontSize: '0.8rem', color: form.phone ? 'var(--brand-blue)' : 'var(--brand-red)' }}>
+                                        TELÉFONO {!form.phone && '*'}
+                                    </label>
+                                    <input className="input-field-text" type="tel" placeholder="Ej. 555-0198" value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
                                 </div>
                                 <div className="input-group">
-                                    <label className="input-label" style={{ fontSize: '1rem' }}>EMAIL</label>
-                                    <input className="input-field-text" placeholder="correo@empresa.com" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} />
+                                    <label className="input-label" style={{ fontSize: '0.8rem' }}>EMAIL</label>
+                                    <input className="input-field-text" type="email" placeholder="correo@ejemplo.com" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} />
                                 </div>
                             </div>
                         </div>
-                        <div className="form-actions" style={{ marginTop: '2.5rem' }}>
-                            <button className="btn-secondary" onClick={() => setIsEditing(false)}>Cancelar</button>
-                            <button className="btn-primary" onClick={handleSave} disabled={!form.name || !form.phone}>💾 Guardar Cliente</button>
+                        <div className="form-actions" style={{ marginTop: '2.5rem', flexDirection: 'column', gap: '1rem' }}>
+                            <button className="btn-primary" onClick={handleSave} disabled={!form.name || !form.phone || status !== 'idle'} style={{ width: '100%', padding: '1.2rem' }}>
+                                {status === 'saving' ? '⏳ Guardando...' : status === 'success' ? '✅ ¡Guardado!' : '💾 Guardar Cliente'}
+                            </button>
+                            <button className="btn-secondary" onClick={() => setIsEditing(false)} disabled={status !== 'idle'} style={{ width: '100%' }}>Cancelar</button>
                         </div>
                     </section>
                 ) : (
-                    <div className="clients-list">
+                    <div className="clients-list" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
                         {state.clients.length === 0 ? (
-                            <div className="empty-state">No tienes clientes registrados todavía.</div>
+                            <div className="empty-state" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-tertiary)' }}>No tienes clientes registrados todavía.</div>
                         ) : (
                             state.clients.map(client => (
-                                <div key={client.id} className="client-card">
-                                    <div className="client-info">
-                                        <div className="client-name">{client.name}</div>
-                                        {client.company && <div className="client-company">🏢 {client.company}</div>}
-                                        <div className="client-contact">
+                                <div key={client.id} className="client-card" style={{ background: 'var(--panel-bg)', borderRadius: 'var(--radius-md)', padding: '1.2rem', border: '1px solid var(--panel-border)' }}>
+                                    <div className="client-info" style={{ marginBottom: '1.2rem' }}>
+                                        <div className="client-name" style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.2rem' }}>{client.name}</div>
+                                        {client.company && <div className="client-company" style={{ fontSize: '0.85rem', color: 'var(--brand-blue)', marginBottom: '0.5rem' }}>🏢 {client.company}</div>}
+                                        <div className="client-contact" style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                                             <span>📞 {client.phone}</span>
                                             {client.email && <span>✉️ {client.email}</span>}
                                         </div>
                                     </div>
                                     <div className="client-actions" style={{ display: 'flex', gap: '8px' }}>
-                                        <button className="btn-icon btn-icon--edit" onClick={() => handleEdit(client)} title="Editar Cliente">
-                                            ✏️ Editar
+                                        <button className="btn-icon btn-icon--edit" onClick={() => handleEdit(client)} style={{ flex: 1 }}>
+                                            ✏️
                                         </button>
-                                        <button className="btn-icon btn-icon--danger" onClick={() => handleDelete(client.id)} title="Eliminar Cliente">
-                                            🗑️ Eliminar
+                                        <button className="btn-icon btn-icon--danger" onClick={() => handleDelete(client.id)} style={{ flex: 1 }}>
+                                            🗑️
                                         </button>
                                     </div>
                                 </div>
