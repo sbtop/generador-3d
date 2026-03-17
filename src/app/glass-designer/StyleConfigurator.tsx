@@ -80,7 +80,7 @@ export function StyleConfigurator() {
                                         <span className="hardware-item__qty">× {hw.quantity}</span>
                                     </div>
                                     <span className="hardware-item__price">
-                                        ${(hw.unitPrice * hw.quantity).toLocaleString('es-MX')} MXN
+                                        ${(hw.unitPrice * hw.quantity).toLocaleString('es-MX')}
                                     </span>
                                 </div>
                             ))}
@@ -113,7 +113,7 @@ export function StyleConfigurator() {
                             </div>
                             <div className="cost-row cost-row--total">
                                 <span>TOTAL</span>
-                                <span>${state.quote.total.toLocaleString('es-MX')} MXN</span>
+                                <span>${state.quote.total.toLocaleString('es-MX')}</span>
                             </div>
                         </div>
                     </section>

@@ -2,49 +2,68 @@ import { useState } from 'react';
 import { useProject } from '../../store/projectStore';
 import { jsPDF } from 'jspdf';
 
+// --- PDF CONSTANTS ---
+const PAGE_W = 210;
+const MARGIN = 20;
+const FOOTER_Y = 285;
+
 function generatePDF(state: ReturnType<typeof useProject>['state']) {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageW = 210;
-    const margin = 20;
-    let y = margin;
+    let y = MARGIN;
 
-    // ── Header ────────────────────────────────────────────────────────────────
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, pageW, 40, 'F');
+    const drawHeader = () => {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, PAGE_W, 40, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('GlassPro 3D', MARGIN, 18);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(148, 163, 184);
+        doc.text('Orden de Corte y Suministro de Vidrio Templado', MARGIN, 26);
+        doc.setTextColor(96, 165, 250);
+        doc.setFontSize(9);
+        doc.text(`Folio: #${Date.now().toString().slice(-6)}`, PAGE_W - MARGIN, 14, { align: 'right' });
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}`, PAGE_W - MARGIN, 20, { align: 'right' });
+    };
 
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('GlassPro 3D', margin, 18);
+    const drawFooter = () => {
+        const currPage = doc.internal.pages.length - 1;
+        doc.setPage(currPage);
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, FOOTER_Y, PAGE_W, 12, 'F');
+        doc.setTextColor(148, 163, 184);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text('GlassPro 3D — Especialista en Vidrio Templado', MARGIN, FOOTER_Y + 7);
+        doc.text(`Página ${currPage}`, PAGE_W - MARGIN, FOOTER_Y + 7, { align: 'right' });
+    };
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(148, 163, 184);
-    doc.text('Orden de Corte y Suministro de Vidrio Templado', margin, 26);
+    const checkPageBreak = (neededY: number) => {
+        if (y + neededY > FOOTER_Y - 10) {
+            drawFooter();
+            doc.addPage();
+            y = 50; // Empezar después del header si lo repitiéramos, pero aquí solo saltamos
+            return true;
+        }
+        return false;
+    };
 
-    doc.setTextColor(96, 165, 250);
-    doc.setFontSize(9);
-    doc.text(`Folio: #${Date.now().toString().slice(-6)}`, pageW - margin, 14, { align: 'right' });
-    doc.setTextColor(148, 163, 184);
-    doc.text(`Fecha: ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageW - margin, 20, { align: 'right' });
-
+    drawHeader();
     y = 52;
 
     // ── Datos del proyecto ────────────────────────────────────────────────────
     doc.setTextColor(15, 23, 42);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.text('DATOS DEL PROYECTO', margin, y);
+    doc.text('DATOS DEL PROYECTO', MARGIN, y);
     y += 6;
-
     doc.setDrawColor(59, 130, 246);
     doc.setLineWidth(0.5);
-    doc.line(margin, y, pageW - margin, y);
+    doc.line(MARGIN, y, PAGE_W - MARGIN, y);
     y += 6;
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(30, 41, 59);
 
     const projectData = [
         ['Proyecto:', state.projectName || 'Sin nombre'],
@@ -54,177 +73,163 @@ function generatePDF(state: ReturnType<typeof useProject>['state']) {
         ['Acabado Herrajes:', state.finish.charAt(0).toUpperCase() + state.finish.slice(1)],
     ];
 
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 41, 59);
     projectData.forEach(([label, value]) => {
         doc.setFont('helvetica', 'bold');
-        doc.text(label, margin, y);
+        doc.text(label, MARGIN, y);
         doc.setFont('helvetica', 'normal');
-        doc.text(value, margin + 55, y);
+        doc.text(value, MARGIN + 55, y);
         y += 7;
     });
-
     y += 4;
 
     // ── Medidas de Corte ──────────────────────────────────────────────────────
+    checkPageBreak(20);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(15, 23, 42);
-    doc.text('ORDEN DE CORTE — DATOS A FÁBRICA', margin, y);
+    doc.text('ORDEN DE CORTE — DATOS A FÁBRICA', MARGIN, y);
     y += 6;
-    doc.setDrawColor(59, 130, 246);
-    doc.line(margin, y, pageW - margin, y);
+    doc.line(MARGIN, y, PAGE_W - MARGIN, y);
     y += 8;
 
     state.metrics.panels.forEach((panel: any) => {
-        // Panel header
+        const barrenosSize = panel.barrenos.length * 5 + 5;
+        checkPageBreak(30 + barrenosSize);
+
         doc.setFillColor(241, 245, 249);
-        doc.rect(margin, y - 5, pageW - margin * 2, 8, 'F');
+        doc.rect(MARGIN, y - 5, PAGE_W - MARGIN * 2, 8, 'F');
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(30, 41, 59);
-        doc.text(panel.label.toUpperCase(), margin + 2, y);
+        doc.text(panel.label.toUpperCase(), MARGIN + 2, y);
         y += 10;
 
-        // Dimensiones
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(10);
-
-        const panelData: [string, string][] = [
+        const pData: [string, string][] = [
             ['Medida de Corte:', `${panel.glassWidth} × ${panel.glassHeight} mm`],
             ['Área:', `${panel.area} m²`],
             ['Peso estimado:', `${panel.weight} kg`],
         ];
-        panelData.forEach(([l, v]) => {
+        pData.forEach(([l, v]) => {
             doc.setFont('helvetica', 'bold');
-            doc.text(l, margin + 4, y);
+            doc.text(l, MARGIN + 4, y);
             doc.setFont('helvetica', 'normal');
-            doc.text(v, margin + 50, y);
+            doc.text(v, MARGIN + 50, y);
             y += 6;
         });
 
-        // Barrenos
         if (panel.barrenos.length > 0) {
             y += 2;
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(59, 130, 246);
-            doc.text('Posición de Barrenos:', margin + 4, y);
+            doc.text('Posición de Barrenos:', MARGIN + 4, y);
             y += 5;
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(30, 41, 59);
             panel.barrenos.forEach((b: any) => {
-                doc.text(`• ${b.description}: X=${b.x}mm  Y=${b.y}mm  ⌀${b.diameter}mm`, margin + 8, y);
+                doc.text(`• ${b.description}: X=${b.x}mm  Y=${b.y}mm  ⌀${b.diameter}mm`, MARGIN + 8, y);
                 y += 5;
             });
         }
         y += 6;
     });
 
-    // Resumen de peso total
+    checkPageBreak(15);
     doc.setFillColor(30, 58, 138);
-    doc.rect(margin, y, pageW - margin * 2, 12, 'F');
+    doc.rect(MARGIN, y, PAGE_W - MARGIN * 2, 12, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(10);
-    doc.text(`Peso Total: ${state.metrics.totalWeight} kg  |  Área Total: ${state.metrics.totalArea} m²  |  Paneles: ${state.metrics.panels.length}`, margin + 4, y + 7);
+    doc.text(`Peso Total: ${state.metrics.totalWeight} kg  |  Área Total: ${state.metrics.totalArea} m²`, MARGIN + 4, y + 7);
     y += 20;
 
     // ── Herrajes ──────────────────────────────────────────────────────────────
+    checkPageBreak(30);
     doc.setTextColor(15, 23, 42);
-    doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.text('LISTA DE HERRAJES (BOM)', margin, y);
+    doc.text('LISTA DE HERRAJES (BOM)', MARGIN, y);
     y += 6;
     doc.setDrawColor(59, 130, 246);
-    doc.line(margin, y, pageW - margin, y);
+    doc.line(MARGIN, y, PAGE_W - MARGIN, y);
     y += 8;
 
-    // Table header
     doc.setFillColor(15, 23, 42);
-    doc.rect(margin, y - 5, pageW - margin * 2, 8, 'F');
+    doc.rect(MARGIN, y - 5, PAGE_W - MARGIN * 2, 8, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(9);
-    doc.text('Artículo', margin + 2, y);
-    doc.text('Cant.', margin + 100, y);
-    doc.text('P. Unit.', margin + 120, y);
-    doc.text('Total', margin + 148, y);
-    y += 6;
+    doc.text('Artículo', MARGIN + 2, y);
+    doc.text('Cant.', PAGE_W - MARGIN - 60, y);
+    doc.text('Total', PAGE_W - MARGIN - 20, y, { align: 'right' });
+    y += 8;
 
     doc.setTextColor(30, 41, 59);
     doc.setFont('helvetica', 'normal');
     state.hardware.forEach((hw, i) => {
+        checkPageBreak(8);
         if (i % 2 === 0) {
             doc.setFillColor(248, 250, 252);
-            doc.rect(margin, y - 4, pageW - margin * 2, 6, 'F');
+            doc.rect(MARGIN, y - 4, PAGE_W - MARGIN * 2, 6, 'F');
         }
-        doc.text(hw.name, margin + 2, y);
-        doc.text(String(hw.quantity), margin + 102, y);
-        doc.text(`$${hw.unitPrice.toLocaleString('es-MX')}`, margin + 120, y);
-        doc.text(`$${(hw.unitPrice * hw.quantity).toLocaleString('es-MX')}`, margin + 148, y);
+        doc.text(hw.name, MARGIN + 2, y);
+        doc.text(String(hw.quantity), PAGE_W - MARGIN - 60, y);
+        doc.text(`$${(hw.unitPrice * hw.quantity).toLocaleString('es-MX')}`, PAGE_W - MARGIN - 2, y, { align: 'right' });
         y += 6;
     });
-
-    y += 6;
+    y += 10;
 
     // ── Cotización ────────────────────────────────────────────────────────────
+    checkPageBreak(40);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
-    doc.setTextColor(15, 23, 42);
-    doc.text('COTIZACIÓN', margin, y);
+    doc.text('COTIZACIÓN FINAL', MARGIN, y);
     y += 6;
-    doc.setDrawColor(59, 130, 246);
-    doc.line(margin, y, pageW - margin, y);
+    doc.line(MARGIN, y, PAGE_W - MARGIN, y);
     y += 8;
 
     const quoteRows: [string, string][] = [
-        ['Costo Vidrio:', `$${state.quote.glassCost.toLocaleString('es-MX')} MXN`],
-        ['Costo Herrajes:', `$${state.quote.hardwareCost.toLocaleString('es-MX')} MXN`],
-        ['Mano de Obra:', `$${state.quote.laborCost.toLocaleString('es-MX')} MXN`],
-        ['Subtotal:', `$${state.quote.subtotal.toLocaleString('es-MX')} MXN`],
-        ['IVA (16%):', `$${state.quote.tax.toLocaleString('es-MX')} MXN`],
+        ['Costo Vidrio:', `$${state.quote.glassCost.toLocaleString('es-MX')}`],
+        ['Costo Herrajes:', `$${state.quote.hardwareCost.toLocaleString('es-MX')}`],
+        ['Instalación/Mano de Obra:', `$${state.quote.laborCost.toLocaleString('es-MX')}`],
+        ['Subtotal:', `$${state.quote.subtotal.toLocaleString('es-MX')}`],
+        ['IVA (16%):', `$${state.quote.tax.toLocaleString('es-MX')}`],
     ];
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     quoteRows.forEach(([l, v]) => {
-        doc.text(l, margin + 4, y);
-        doc.text(v, pageW - margin, y, { align: 'right' });
+        doc.text(l, MARGIN + 4, y);
+        doc.text(v, PAGE_W - MARGIN, y, { align: 'right' });
         y += 7;
     });
 
     doc.setFillColor(59, 130, 246);
-    doc.rect(margin, y - 2, pageW - margin * 2, 12, 'F');
+    doc.rect(MARGIN, y - 2, PAGE_W - MARGIN * 2, 12, 'F');
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text('TOTAL:', margin + 4, y + 6);
-    doc.text(`$${state.quote.total.toLocaleString('es-MX')} MXN`, pageW - margin, y + 6, { align: 'right' });
-    y += 18;
+    doc.text('TOTAL:', MARGIN + 4, y + 6);
+    doc.text(`$${state.quote.total.toLocaleString('es-MX')}`, PAGE_W - MARGIN - 2, y + 6, { align: 'right' });
+    y += 20;
 
     // ── Alertas ───────────────────────────────────────────────────────────────
     if (state.alerts.length > 0) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
+        checkPageBreak(25);
         doc.setTextColor(234, 88, 12);
-        doc.text('⚠ ALERTAS DE SEGURIDAD', margin, y);
+        doc.setFontSize(10);
+        doc.text('⚠ ALERTAS DE SEGURIDAD', MARGIN, y);
         y += 6;
-        doc.setFont('helvetica', 'normal');
         doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
         state.alerts.forEach(a => {
-            doc.setTextColor(a.severity === 'error' ? [220, 38, 38] as any : a.severity === 'warning' ? [234, 88, 12] as any : [14, 165, 233] as any);
-            const lines = doc.splitTextToSize(`${a.title}: ${a.message}`, pageW - margin * 2 - 8);
-            doc.text(lines, margin + 4, y);
-            y += lines.length * 5 + 3;
+            const lines = doc.splitTextToSize(`• ${a.title}: ${a.message}`, PAGE_W - MARGIN * 2 - 10);
+            checkPageBreak(lines.length * 5 + 2);
+            doc.text(lines, MARGIN + 4, y);
+            y += lines.length * 5 + 2;
         });
     }
 
-    // ── Footer ────────────────────────────────────────────────────────────────
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 285, pageW, 12, 'F');
-    doc.setTextColor(148, 163, 184);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text('GlassPro 3D — Especialista en Vidrio Templado', margin, 292);
-    doc.text('Documento generado automáticamente', pageW - margin, 292, { align: 'right' });
-
+    drawFooter();
     doc.save(`GlassPro-${state.projectName || 'Orden'}-${Date.now().toString().slice(-6)}.pdf`);
 }
 
@@ -240,13 +245,10 @@ function generateWhatsApp(state: ReturnType<typeof useProject>['state']): string
         ``,
         `📦 *Medidas de Corte:*`,
         ...state.metrics.panels.map((p: any) =>
-            `  • ${p.label}: *${p.glassWidth} × ${p.glassHeight} mm* | ${p.weight} kg`
+            `  • ${p.label}: *${p.glassWidth} × ${p.glassHeight} mm*`
         ),
         ``,
-        `⚖️ Peso total: ${state.metrics.totalWeight} kg`,
-        `📐 Área total: ${state.metrics.totalArea} m²`,
-        ``,
-        `💰 *Total: $${state.quote.total.toLocaleString('es-MX')} MXN (IVA incl.)*`,
+        `💰 *Total: $${state.quote.total.toLocaleString('es-MX')} (IVA incl.)*`,
     ];
     return encodeURIComponent(lines.join('\n'));
 }
@@ -258,7 +260,6 @@ export function OrderGenerator() {
     const handlePDF = async () => {
         setPdfStatus('generating');
         try {
-            // Un pequeño respiro para que el UI muestre el estado de carga
             await new Promise(resolve => setTimeout(resolve, 500));
             generatePDF(state);
             setPdfStatus('success');
@@ -266,7 +267,7 @@ export function OrderGenerator() {
         } catch (err) {
             console.error('PDF Generation failed:', err);
             setPdfStatus('error');
-            alert('Error al generar el PDF. Si estás en móvil, asegúrate de permitir las descargas.');
+            alert('Error al generar el PDF.');
             setTimeout(() => setPdfStatus('idle'), 3000);
         }
     };
@@ -279,7 +280,6 @@ export function OrderGenerator() {
             </div>
 
             <div className="module__body">
-                {/* Resumen ejecutivo */}
                 <section className="section">
                     <h3 className="section__title">Resumen Ejecutivo</h3>
                     <div className="summary-grid">
@@ -297,12 +297,11 @@ export function OrderGenerator() {
                         </div>
                         <div className="summary-card summary-card--orange">
                             <div className="summary-card__value">${state.quote.total.toLocaleString('es-MX')}</div>
-                            <div className="summary-card__label">Total MXN</div>
+                            <div className="summary-card__label">Total Orden</div>
                         </div>
                     </div>
                 </section>
 
-                {/* Detalles de paneles */}
                 <section className="section">
                     <h3 className="section__title">Detalle por Hoja</h3>
                     {state.metrics.panels.map((panel: any) => (
@@ -331,7 +330,6 @@ export function OrderGenerator() {
                     ))}
                 </section>
 
-                {/* Herrajes y cotización resumida */}
                 <section className="section">
                     <h3 className="section__title">Lista de Herrajes</h3>
                     <div className="order-hardware-list">
@@ -345,7 +343,6 @@ export function OrderGenerator() {
                     </div>
                 </section>
 
-                {/* Alertas de seguridad */}
                 {state.alerts.length > 0 && (
                     <section className="section">
                         <h3 className="section__title">🛡️ Alertas de Seguridad</h3>
@@ -358,7 +355,6 @@ export function OrderGenerator() {
                     </section>
                 )}
 
-                {/* Acciones */}
                 <section className="section">
                     <h3 className="section__title">Exportar y Compartir</h3>
                     <div className="actions-grid">
