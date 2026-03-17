@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProject } from '../../store/projectStore';
 import { ARScannerModal } from './ARScannerModal';
-import { GlassType, GlassMaterial, GlassThickness } from '../../backend/pricing-engine/glassCalculator';
+import { GlassType, GlassThickness, ShowerConfig } from '../../backend/pricing-engine/glassCalculator';
 import { SafetyAlert } from '../../backend/pricing-engine/safetyValidator';
 
 const GLASS_TYPES: { id: GlassType; label: string; icon: string; desc: string }[] = [
@@ -10,12 +10,11 @@ const GLASS_TYPES: { id: GlassType; label: string; icon: string; desc: string }[
     { id: 'ventana', label: 'Ventana / Fijo', icon: '🪟', desc: 'Panel fijo con sellado perimetral' },
 ];
 
-const MATERIALS: { id: GlassMaterial; label: string; color: string; desc: string }[] = [
-    { id: 'claro', label: 'Claro', color: 'rgba(200,235,255,0.35)', desc: 'Máxima transparencia' },
-    { id: 'extraclaro', label: 'Extraclaro', color: 'rgba(220,245,255,0.45)', desc: 'Sin tinte verdoso' },
-    { id: 'satinado', label: 'Satinado', color: 'rgba(210,220,230,0.6)', desc: 'Privacidad translúcida' },
-    { id: 'gris', label: 'Gris', color: 'rgba(100,120,140,0.45)', desc: 'Para exteriores' },
-    { id: 'bronce', label: 'Bronce', color: 'rgba(165,120,60,0.40)', desc: 'Estilo cálido premium' },
+const SHOWER_TEMPLATES: { id: ShowerConfig; label: string; icon: string }[] = [
+    { id: 'single', label: 'Puerta Sola', icon: '🚪' },
+    { id: 'door-panel', label: 'Puerta + Fijo Der', icon: '🚪|' },
+    { id: 'panel-door', label: 'Fijo Izq + Puerta', icon: '|🚪' },
+    { id: 'panel-door-panel', label: 'Fijo + Puerta + Fijo', icon: '|🚪|' },
 ];
 
 const THICKNESSES: { val: GlassThickness; label: string; rec: string }[] = [
@@ -38,26 +37,45 @@ function AlertCard({ alert }: { alert: SafetyAlert }) {
 
 export function VanoOptimizer() {
     const { state, dispatch } = useProject();
-    const { metrics, alerts } = state;
+    const { metrics, alerts, preferences } = state;
     const [showAR, setShowAR] = useState(false);
-    const [unit, setUnit] = useState<'mm' | 'm'>('mm');
+    const [unit, setUnit] = useState<'mm' | 'm' | 'in'>(preferences.measureUnits);
+
+    // Sync unit with preferences when preferences change (e.g. from Settings)
+    useEffect(() => {
+        setUnit(preferences.measureUnits);
+    }, [preferences.measureUnits]);
 
     const isM = unit === 'm';
-    const displayW = isM ? state.vanoWidth / 1000 : state.vanoWidth;
-    const displayH = isM ? state.vanoHeight / 1000 : state.vanoHeight;
-    const step = isM ? 0.001 : 1;
-    const min = isM ? 0.2 : 200;
-    const max = isM ? 5.0 : 5000;
+    const isIn = unit === 'in';
+
+    // Convert current mm state to display units
+    const getDisplayVal = (mmVal: number) => {
+        if (isM) return mmVal / 1000;
+        if (isIn) return +(mmVal / 25.4).toFixed(3);
+        return mmVal;
+    };
+
+    const displayW = getDisplayVal(state.vanoWidth);
+    const displayH = getDisplayVal(state.vanoHeight);
+
+    const step = isM ? 0.001 : isIn ? 0.125 : 1;
+    const min = isM ? 0.2 : isIn ? 8 : 200;
+    const max = isM ? 5.0 : isIn ? 200 : 5000;
 
     const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = Number(e.target.value);
-        const mmVal = isM ? Math.round(val * 1000) : val;
+        let mmVal = val;
+        if (isM) mmVal = Math.round(val * 1000);
+        if (isIn) mmVal = Math.round(val * 25.4);
         dispatch({ type: 'SET_VANO', payload: { vanoWidth: mmVal } });
     };
 
     const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = Number(e.target.value);
-        const mmVal = isM ? Math.round(val * 1000) : val;
+        let mmVal = val;
+        if (isM) mmVal = Math.round(val * 1000);
+        if (isIn) mmVal = Math.round(val * 25.4);
         dispatch({ type: 'SET_VANO', payload: { vanoHeight: mmVal } });
     };
 
@@ -73,14 +91,14 @@ export function VanoOptimizer() {
                 />
             )}
             <div className="module__header">
-                <h2 className="module__title">📐 Optimizador de Vano</h2>
-                <p className="module__subtitle">Introduce las medidas del hueco real y la app calcula las medidas exactas de corte.</p>
+                <h2 className="module__title">📐 Configuración de Diseño</h2>
+                <p className="module__subtitle">Define el hueco y la plantilla de la ducha para ver el despiece exacto.</p>
             </div>
 
             <div className="module__body">
                 {/* Tipo de vano */}
                 <section className="section">
-                    <h3 className="section__title">Tipo de Instalación</h3>
+                    <h3 className="section__title">1. Tipo de Instalación</h3>
                     <div className="type-grid">
                         {GLASS_TYPES.map(t => (
                             <button
@@ -96,24 +114,40 @@ export function VanoOptimizer() {
                     </div>
                 </section>
 
+                {/* Plantilla de ducha (SOLO SI ES BATIENTE) */}
+                {state.glassType === 'batiente' && (
+                    <section className="section">
+                        <h3 className="section__title">2. Estilo / Plantilla</h3>
+                        <div className="type-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+                            {SHOWER_TEMPLATES.map(t => (
+                                <button
+                                    key={t.id}
+                                    className={`type-card ${state.showerConfig === t.id ? 'type-card--active' : ''}`}
+                                    onClick={() => dispatch({ type: 'SET_SHOWER_CONFIG', payload: t.id })}
+                                >
+                                    <span className="type-card__icon" style={{ fontSize: '1.5rem', opacity: 0.8 }}>{t.icon}</span>
+                                    <span className="type-card__label">{t.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 {/* Medidas de vano */}
                 <section className="section">
                     <div className="section-header-flex">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
                             <h3 className="section__title" style={{ marginBottom: 0 }}>Medidas del Vano ({unit})</h3>
-                            <div className="unit-toggle" style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', overflow: 'hidden' }}>
-                                <button
-                                    onClick={() => setUnit('mm')}
-                                    style={{ padding: '4px 12px', border: 'none', background: unit === 'mm' ? 'var(--brand-blue)' : 'transparent', color: unit === 'mm' ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'var(--transition)' }}
-                                >
-                                    mm
-                                </button>
-                                <button
-                                    onClick={() => setUnit('m')}
-                                    style={{ padding: '4px 12px', border: 'none', background: unit === 'm' ? 'var(--brand-blue)' : 'transparent', color: unit === 'm' ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'var(--transition)' }}
-                                >
-                                    metros
-                                </button>
+                            <div className="unit-toggle" style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', overflow: 'hidden' }}>
+                                {(['mm', 'm', 'in'] as const).map(u => (
+                                    <button
+                                        key={u}
+                                        onClick={() => setUnit(u)}
+                                        style={{ padding: '4px 12px', border: 'none', background: unit === u ? 'var(--brand-blue)' : 'transparent', color: unit === u ? 'white' : 'var(--text-secondary)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'var(--transition)' }}
+                                    >
+                                        {u}
+                                    </button>
+                                ))}
                             </div>
                         </div>
                         <button className="btn-ar-trigger" onClick={() => setShowAR(true)}>
@@ -167,30 +201,12 @@ export function VanoOptimizer() {
                     </div>
                 </section>
 
-                {/* Material */}
-                <section className="section">
-                    <h3 className="section__title">Material del Vidrio</h3>
-                    <div className="material-grid">
-                        {MATERIALS.map(m => (
-                            <button
-                                key={m.id}
-                                className={`material-card ${state.material === m.id ? 'material-card--active' : ''}`}
-                                onClick={() => dispatch({ type: 'SET_MATERIAL', payload: m.id })}
-                            >
-                                <div className="material-card__preview" style={{ background: m.color }} />
-                                <span className="material-card__label">{m.label}</span>
-                                <span className="material-card__desc">{m.desc}</span>
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
                 {/* Resultado de corte */}
                 <section className="section">
                     <h3 className="section__title">📦 Medidas de Corte — Orden a Fábrica</h3>
                     <div className="results-grid">
-                        {metrics.panels.map((panel: any) => (
-                            <div key={panel.label} className="result-card">
+                        {metrics.panels.map((panel: any, idx: number) => (
+                            <div key={idx} className="result-card">
                                 <div className="result-card__label">{panel.label}</div>
                                 <div className="result-card__dims">
                                     <span className="result-card__dim">{panel.glassWidth} mm</span>
@@ -200,14 +216,6 @@ export function VanoOptimizer() {
                                 <div className="result-card__meta">
                                     <span>Área: <strong>{panel.area} m²</strong></span>
                                     <span>Peso: <strong>{panel.weight} kg</strong></span>
-                                </div>
-                                <div className="result-card__barrenos">
-                                    <span className="result-card__barrenos-title">Barrenos ({panel.barrenos.length}):</span>
-                                    {panel.barrenos.map((b: any, i: number) => (
-                                        <span key={i} className="result-card__barreno">
-                                            {b.description}: X={b.x}mm / Y={b.y}mm / ⌀{b.diameter}mm
-                                        </span>
-                                    ))}
                                 </div>
                             </div>
                         ))}

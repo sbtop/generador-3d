@@ -129,18 +129,23 @@ function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, ha
 }
 
 export function GlassScene({ panels, glassColor, glassOpacity, hardwareColor, hardwareMetalness, interactive = false, isOpen = false, glassType = 'batiente' }: GlassSceneProps) {
-    const spacing = panels.length > 1
-        ? (panels[0].glassWidth / 1000) * (glassType === 'corrediza' ? 0 : 0.52)
-        : 0;
-    const totalW = panels.length * (panels[0].glassWidth / 1000) + (panels.length - 1) * 0.01;
-    const startX = -totalW / 2 + panels[0].glassWidth / 1000 / 2;
-
     // En corredizas, el primer panel es fijo, el segundo (si hay) móvil.
-    // En batientes de una hoja, la única es móvil (índice 0).
-    const isMovableIndex = (mode: GlassType, index: number) => {
-        if (mode === 'corrediza') return index === 1; // La segunda hoja es la que desliza
-        if (mode === 'batiente') return index === 0; // Puerta batiente
-        return false; // ventana 
+    // Para batientes, buscamos el que diga "Puerta" en el label
+    const isMovableIndex = (mode: GlassType, index: number, label: string) => {
+        if (mode === 'corrediza') return index === 1;
+        if (mode === 'batiente') return label.toLowerCase().includes('puerta');
+        return false;
+    };
+
+    const totalW = panels.reduce((sum, p) => sum + p.glassWidth / 1000, 0) + (panels.length - 1) * 0.005;
+
+    // Función para calcular el desplazamiento acumulado de cada panel
+    const getPanelOffset = (index: number) => {
+        let offset = -totalW / 2;
+        for (let i = 0; i < index; i++) {
+            offset += panels[i].glassWidth / 1000 + 0.005;
+        }
+        return offset + (panels[index].glassWidth / 1000) / 2;
     };
 
     return (
@@ -165,14 +170,14 @@ export function GlassScene({ panels, glassColor, glassOpacity, hardwareColor, ha
 
                 {panels.map((panel, i) => (
                     <PanelMesh
-                        key={panel.label}
+                        key={i}
                         panel={panel}
-                        offsetX={startX + i * spacing}
+                        offsetX={getPanelOffset(i)}
                         glassColor={glassColor}
                         glassOpacity={glassOpacity}
                         hardwareColor={hardwareColor}
                         hardwareMetalness={hardwareMetalness}
-                        isMovable={interactive && isMovableIndex(glassType, i)}
+                        isMovable={interactive && isMovableIndex(glassType, i, panel.label)}
                         isOpen={isOpen}
                         glassType={glassType}
                     />

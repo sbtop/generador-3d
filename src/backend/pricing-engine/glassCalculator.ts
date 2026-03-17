@@ -7,6 +7,7 @@ export type GlassType = 'batiente' | 'corrediza' | 'ventana';
 export type GlassMaterial = 'claro' | 'extraclaro' | 'satinado' | 'gris' | 'bronce';
 export type GlassThickness = 6 | 8 | 10 | 12;
 export type HardwareFinish = 'cromo' | 'negro' | 'satin' | 'oro';
+export type ShowerConfig = 'single' | 'door-panel' | 'panel-door' | 'panel-door-panel';
 
 export interface Barreno {
     x: number; // mm desde borde izquierdo del vidrio
@@ -155,13 +156,53 @@ export function calculateGlass(
     vanoWidth: number,
     vanoHeight: number,
     thickness: GlassThickness,
+    showerConfig: ShowerConfig = 'single',
+    defaultDoorWidth: number = 600
 ): ShowerDoorMetrics {
-    let panels: GlassPanel[];
+    let panels: GlassPanel[] = [];
 
-    switch (glassType) {
-        case 'batiente': panels = calcBatiente(vanoWidth, vanoHeight, thickness); break;
-        case 'corrediza': panels = calcCorrediza(vanoWidth, vanoHeight, thickness); break;
-        case 'ventana': panels = calcVentana(vanoWidth, vanoHeight, thickness); break;
+    if (glassType === 'batiente') {
+        switch (showerConfig) {
+            case 'single':
+                panels = calcBatiente(vanoWidth, vanoHeight, thickness);
+                break;
+            case 'door-panel': {
+                const doorW = Math.min(defaultDoorWidth, vanoWidth - 200);
+                const fixedW = vanoWidth - doorW;
+                const door = calcBatiente(doorW, vanoHeight, thickness)[0];
+                const fixed = calcVentana(fixedW, vanoHeight, thickness)[0];
+                door.label = 'Puerta';
+                fixed.label = 'Fijo';
+                panels = [door, fixed];
+                break;
+            }
+            case 'panel-door': {
+                const doorW = Math.min(defaultDoorWidth, vanoWidth - 200);
+                const fixedW = vanoWidth - doorW;
+                const fixed = calcVentana(fixedW, vanoHeight, thickness)[0];
+                const door = calcBatiente(doorW, vanoHeight, thickness)[0];
+                fixed.label = 'Fijo';
+                door.label = 'Puerta';
+                panels = [fixed, door];
+                break;
+            }
+            case 'panel-door-panel': {
+                const doorW = Math.min(defaultDoorWidth, vanoWidth - 400);
+                const sideW = (vanoWidth - doorW) / 2;
+                const fixedL = calcVentana(sideW, vanoHeight, thickness)[0];
+                const door = calcBatiente(doorW, vanoHeight, thickness)[0];
+                const fixedR = calcVentana(sideW, vanoHeight, thickness)[0];
+                fixedL.label = 'Fijo Izq';
+                door.label = 'Puerta';
+                fixedR.label = 'Fijo Der';
+                panels = [fixedL, door, fixedR];
+                break;
+            }
+        }
+    } else if (glassType === 'corrediza') {
+        panels = calcCorrediza(vanoWidth, vanoHeight, thickness);
+    } else {
+        panels = calcVentana(vanoWidth, vanoHeight, thickness);
     }
 
     const totalWeight = +panels.reduce((s, p) => s + p.weight, 0).toFixed(2);

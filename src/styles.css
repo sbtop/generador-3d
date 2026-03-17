@@ -1,20 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --app-bg: #f1f5f9;
-  --sidebar-bg: #ffffff;
-  --panel-bg: rgba(255, 255, 255, 0.7);
-  --panel-border: rgba(148, 163, 184, 0.2);
+  --app-bg: #0f172a;
+  --sidebar-bg: #1e293b;
+  --panel-bg: rgba(30, 41, 59, 0.7);
+  --panel-border: rgba(51, 65, 85, 0.5);
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
 
-  --brand-blue: #2563eb;
-  --brand-blue-hover: #1d4ed8;
-  --brand-green: #059669;
-  --brand-orange: #ea580c;
-  --brand-red: #dc2626;
+  --brand-blue: #3b82f6;
+  --brand-blue-hover: #60a5fa;
+  --brand-green: #10b981;
+  --brand-orange: #f59e0b;
+  --brand-red: #ef4444;
 
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -71,7 +71,7 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: var(--spacing-xl);
-  background: radial-gradient(circle at 50% -20%, #ffffff 0%, #f1f5f9 100%);
+  background: radial-gradient(circle at 50% -20%, #1e293b 0%, #0f172a 100%);
   /* Mobile safe area support */
   padding-bottom: calc(var(--spacing-xl) + env(safe-area-inset-bottom));
   padding-left: calc(var(--spacing-xl) + env(safe-area-inset-left));
@@ -140,7 +140,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 20;
 }
 
@@ -168,7 +168,7 @@ body {
 }
 
 .sidebar__item:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--text-primary);
 }
 
@@ -255,7 +255,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--spacing-xl);
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(12px);
   z-index: 5;
 }
@@ -428,7 +428,7 @@ body {
 
 .input-field-text {
   width: 100%;
-  background: #ffffff;
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius-md);
   padding: 16px;
@@ -589,7 +589,7 @@ body {
   font-size: 2rem;
   font-weight: 800;
   margin-bottom: var(--spacing-xs);
-  background: linear-gradient(135deg, #0f172a, #475569);
+  background: linear-gradient(135deg, #fff, #94a3b8);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -614,7 +614,7 @@ body {
   border-radius: var(--radius-lg);
   padding: var(--spacing-lg) var(--spacing-xl);
   backdrop-filter: blur(10px);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 .section__title {

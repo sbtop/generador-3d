@@ -2,7 +2,7 @@
  * GlassPro 3D — Estado Global del Proyecto y Aplicación
  */
 import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { GlassType, GlassMaterial, GlassThickness, HardwareFinish, ShowerDoorMetrics, calculateGlass } from '../backend/pricing-engine/glassCalculator';
+import { GlassType, GlassMaterial, GlassThickness, HardwareFinish, ShowerDoorMetrics, ShowerConfig, calculateGlass } from '../backend/pricing-engine/glassCalculator';
 import { HardwareItem, QuoteResult, generateHardwareList, calculateQuote } from '../backend/pricing-engine/quoteCalculator';
 import { SafetyAlert, validateGlass } from '../backend/pricing-engine/safetyValidator';
 
@@ -56,6 +56,7 @@ export interface SavedProject {
     finish: HardwareFinish;
     vanoWidth: number;
     vanoHeight: number;
+    showerConfig: ShowerConfig;
     quoteTotal: number;
 }
 
@@ -82,6 +83,7 @@ export interface AppState {
     finish: HardwareFinish;
     vanoWidth: number;
     vanoHeight: number;
+    showerConfig: ShowerConfig;
 
     // Computed (derived)
     metrics: ShowerDoorMetrics;
@@ -107,13 +109,21 @@ type Action =
     | { type: 'SET_MATERIAL'; payload: GlassMaterial }
     | { type: 'SET_THICKNESS'; payload: GlassThickness }
     | { type: 'SET_FINISH'; payload: HardwareFinish }
+    | { type: 'SET_SHOWER_CONFIG'; payload: ShowerConfig }
     | { type: 'SET_VANO'; payload: { vanoWidth?: number; vanoHeight?: number } }
     | { type: 'UPDATE_PRICING_CONFIG'; payload: PricingConfig }
     | { type: 'UPDATE_PREFERENCES'; payload: Partial<UserPreferences> }
     | { type: 'INIT_STORAGE'; payload: { clients: Client[], savedProjects: SavedProject[], pricing: PricingConfig | null, preferences: UserPreferences | null } };
 
 function recompute(state: AppState): AppState {
-    const metrics = calculateGlass(state.glassType, state.vanoWidth, state.vanoHeight, state.thickness);
+    const metrics = calculateGlass(
+        state.glassType,
+        state.vanoWidth,
+        state.vanoHeight,
+        state.thickness,
+        state.showerConfig,
+        state.preferences.defaultDoorWidth
+    );
     const hardware = generateHardwareList(state.glassType, metrics, state.finish, state.pricingConfig);
     const quote = calculateQuote(state.glassType, state.material, state.thickness, metrics, hardware, state.pricingConfig);
     const alerts = validateGlass(state.glassType, state.material, state.thickness, metrics);
@@ -171,6 +181,7 @@ const initialState: AppState = {
     material: 'claro',
     thickness: 10,
     finish: 'cromo',
+    showerConfig: 'single',
     ...initialVano,
 
     metrics: initialMetrics,
@@ -211,6 +222,7 @@ function reducer(state: AppState, action: Action): AppState {
                 material: 'claro',
                 thickness: 10,
                 finish: 'cromo',
+                showerConfig: 'single',
                 vanoWidth: 900,
                 vanoHeight: 1800,
             };
@@ -246,6 +258,7 @@ function reducer(state: AppState, action: Action): AppState {
                 material: state.material,
                 thickness: state.thickness,
                 finish: state.finish,
+                showerConfig: state.showerConfig,
                 vanoWidth: state.vanoWidth,
                 vanoHeight: state.vanoHeight,
                 quoteTotal: state.quote.total
@@ -284,6 +297,7 @@ function reducer(state: AppState, action: Action): AppState {
         case 'SET_MATERIAL': return recompute({ ...state, material: action.payload });
         case 'SET_THICKNESS': return recompute({ ...state, thickness: action.payload });
         case 'SET_FINISH': return recompute({ ...state, finish: action.payload });
+        case 'SET_SHOWER_CONFIG': return recompute({ ...state, showerConfig: action.payload });
         case 'SET_VANO': return recompute({ ...state, ...action.payload });
         case 'UPDATE_PRICING_CONFIG': return recompute({ ...state, pricingConfig: action.payload });
         case 'UPDATE_PREFERENCES': {
