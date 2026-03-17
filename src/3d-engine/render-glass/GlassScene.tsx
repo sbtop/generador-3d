@@ -146,8 +146,16 @@ export function GlassScene({ panels, glassColor, glassOpacity, hardwareColor, ha
     return (
         <div style={{ width: '100%', height: '100%', minHeight: '420px', background: 'transparent', borderRadius: '12px', overflow: 'hidden' }}>
             <Canvas shadows gl={{ antialias: true }}>
-                <PerspectiveCamera makeDefault position={[0, 1.2, 4.0]} fov={35} />
-                <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.8} minDistance={1.8} maxDistance={6} enablePan={false} />
+                <PerspectiveCamera makeDefault position={[0, 0.8, 4.2]} fov={35} />
+                <OrbitControls
+                    makeDefault
+                    minPolarAngle={0}
+                    maxPolarAngle={Math.PI / 1.8}
+                    minDistance={1.8}
+                    maxDistance={8}
+                    enablePan={false}
+                    target={[0, 0.8, 0]}
+                />
 
                 <ambientLight intensity={0.6} />
                 <directionalLight position={[5, 8, 5]} intensity={1.2} castShadow />

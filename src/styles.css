@@ -461,6 +461,10 @@ body {
 /* ─── Mobile Responsiveness ──────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+  .app-content {
+    padding: var(--spacing-md) !important;
+  }
+
   .app-shell {
     flex-direction: column;
     height: 100dvh;
@@ -545,6 +549,7 @@ body {
   }
 
   .configurator-3d {
+    width: 100%;
     min-height: 400px;
     height: 400px;
     grid-row: 1;
