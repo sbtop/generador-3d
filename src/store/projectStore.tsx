@@ -125,24 +125,24 @@ function recompute(state: AppState): AppState {
         state.preferences.defaultDoorWidth
     );
     const hardware = generateHardwareList(state.glassType, metrics, state.finish, state.pricingConfig);
-    const quote = calculateQuote(state.glassType, state.material, state.thickness, metrics, hardware, state.pricingConfig);
+    const quote = calculateQuote(state.glassType, state.material, state.thickness, metrics, hardware, state.pricingConfig, state.preferences.measureUnits);
     const alerts = validateGlass(state.glassType, state.material, state.thickness, metrics);
     return { ...state, metrics, hardware, quote, alerts };
 }
 
 const defaultPricingConfig: PricingConfig = {
-    glassClear: 450,
-    glassExtra: 750,
-    glassColor: 550,
-    hwBisagra: 250,
-    hwJalon: 180,
-    hwRiel: 650,
-    hwClip: 80,
-    hwSellador: 85,
-    installationBase: 1500,
-    laborRate: 280,
-    taxRate: 16,
-    profitMargin: 35,
+    glassClear: 12,    // $12 per sqft
+    glassExtra: 18,    // $18 per sqft
+    glassColor: 15,    // $15 per sqft
+    hwBisagra: 80,     // $80 per hinge
+    hwJalon: 65,       // $65 per handle
+    hwRiel: 120,
+    hwClip: 25,
+    hwSellador: 15,
+    installationBase: 250,
+    laborRate: 45,
+    taxRate: 7,        // Standard tax
+    profitMargin: 30,
 };
 
 const defaultPreferences: UserPreferences = {
@@ -159,7 +159,7 @@ const defaultPreferences: UserPreferences = {
     fixingStyles: 'None'
 };
 
-const initialVano = { vanoWidth: 900, vanoHeight: 1800 };
+const initialVano = { vanoWidth: 1524, vanoHeight: 914 }; // 60" x 36"
 const initialMetrics = calculateGlass('batiente', initialVano.vanoWidth, initialVano.vanoHeight, 10);
 const initialHardware = generateHardwareList('batiente', initialMetrics, 'cromo', defaultPricingConfig);
 const initialQuote = calculateQuote('batiente', 'claro', 10, initialMetrics, initialHardware, defaultPricingConfig);

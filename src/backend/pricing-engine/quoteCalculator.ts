@@ -22,30 +22,17 @@ export interface QuoteResult {
     hardwareCost: number;
     laborCost: number;
     subtotal: number;
-    tax: number;     // 16% IVA (México)
+    tax: number;
     total: number;
-    pricePerM2: number;
-    currency: 'MXN';
+    pricePerUnit: number; // Price per m2 or sqft
+    currency: '$';
     breakdown: {
-        glassM2: number;
-        glassUnitPrice: number;
+        area: number;
+        areaUnit: 'm²' | 'sqft';
+        unitPrice: number;
         laborHours: number;
-        laborHourRate: number;
     };
 }
-
-// ─── Precios base por m² (MXN) ─────────────────────────────────────────────
-
-// Reemplazados por PricingConfig global
-/*
-const GLASS_PRICE_PER_M2: Record<GlassMaterial, Record<GlassThickness, number>> = {
-    claro: { 6: 680, 8: 820, 10: 1050, 12: 1380 },
-    extraclaro: { 6: 920, 8: 1100, 10: 1380, 12: 1750 },
-    satinado: { 6: 980, 8: 1200, 10: 1450, 12: 1850 },
-    gris: { 6: 750, 8: 900, 10: 1150, 12: 1500 },
-    bronce: { 6: 820, 8: 980, 10: 1250, 12: 1600 },
-};
-*/
 
 // Multiplicadores por acabado de herraje
 const FINISH_MULTIPLIER: Record<HardwareFinish, number> = {
@@ -55,27 +42,23 @@ const FINISH_MULTIPLIER: Record<HardwareFinish, number> = {
     oro: 1.6,
 };
 
-// Precios base dinámicos sacados de PricingConfig (antes quemados en const)
 const getHardwarePrice = (type: HardwareType, config: PricingConfig): number => {
     switch (type) {
         case 'bisagra': return config.hwBisagra;
         case 'jalon': return config.hwJalon;
         case 'clip': return config.hwClip;
         case 'riel': return config.hwRiel;
-        case 'tirador': return config.hwJalon; // Usar el mismo importe para tirador que jalon
+        case 'tirador': return config.hwJalon;
         case 'sellador': return config.hwSellador;
         default: return 100;
     }
 };
 
-// Horas de mano de obra estimadas
 const LABOR_HOURS: Record<GlassType, number> = {
     batiente: 3.5,
     corrediza: 5.0,
     ventana: 2.0,
 };
-
-// ─── Generador de lista de herrajes ───────────────────────────────────────
 
 export function generateHardwareList(
     glassType: GlassType,
@@ -84,8 +67,6 @@ export function generateHardwareList(
     config: PricingConfig
 ): HardwareItem[] {
     const mult = FINISH_MULTIPLIER[finish];
-    // Eliminar el baseMult complejo. Sólo usamos mult por acabado.
-
     const items: HardwareItem[] = [];
     const panelCount = metrics.panels.length;
 
@@ -122,8 +103,6 @@ export function generateHardwareList(
     return items;
 }
 
-// ─── Cotizador principal ───────────────────────────────────────────────────
-
 export function calculateQuote(
     glassType: GlassType,
     material: GlassMaterial,
@@ -131,29 +110,32 @@ export function calculateQuote(
     metrics: ShowerDoorMetrics,
     hardware: HardwareItem[],
     config: PricingConfig,
+    _unit: 'mm' | 'm' | 'in' = 'mm',
     customLaborRate?: number,
 ): QuoteResult {
-    // Calcular el precio base del vidrio por m2 (usando una fórmula simplificada según el config)
-    let baseM2Price = config.glassClear;
-    if (material === 'extraclaro') baseM2Price = config.glassExtra;
-    if (material === 'gris' || material === 'bronce' || material === 'satinado') baseM2Price = config.glassColor;
+    // 1. Determine Unit Price based on Material
+    let baseUnitPrice = config.glassClear;
+    if (material === 'extraclaro') baseUnitPrice = config.glassExtra;
+    if (material === 'gris' || material === 'bronce' || material === 'satinado') baseUnitPrice = config.glassColor;
 
-    // Multiplicador por espesor
-    const thickMult = thickness === 6 ? 0.7 : thickness === 8 ? 0.85 : thickness === 10 ? 1.0 : 1.3;
-    const pricePerM2 = Math.round(baseM2Price * thickMult);
+    // 2. Adjust for thickness (simple multiplier)
+    const thickMult = thickness <= 6 ? 0.8 : thickness <= 8 ? 0.9 : thickness <= 10 ? 1.0 : 1.25;
+    const finalUnitPrice = Math.round(baseUnitPrice * thickMult);
 
-    const glassCost = Math.round(metrics.totalArea * pricePerM2);
+    // 3. Calculate Area in SqFt (since the $12 rule is per sqft)
+    // Conversion: 1 m2 = 10.7639 sqft
+    const areaSqFt = metrics.totalArea * 10.7639;
 
+    // 4. Calculate Costs
+    const glassCost = Math.round(areaSqFt * finalUnitPrice);
     const hardwareCost = hardware.reduce((sum, h) => sum + h.unitPrice * h.quantity, 0);
-
-    const laborHours = LABOR_HOURS[glassType];
+    const laborHours = LABOR_HOURS[glassType] || 3;
     const laborRate = customLaborRate ?? config.laborRate;
     const laborCost = Math.round((laborHours * laborRate) + config.installationBase);
 
-    // Aplicar margen
+    // 5. Margin & Totals
     const baseCost = glassCost + hardwareCost + laborCost;
     const subtotal = Math.round(baseCost * (1 + (config.profitMargin / 100)));
-
     const tax = Math.round(subtotal * (config.taxRate / 100));
     const total = subtotal + tax;
 
@@ -164,13 +146,13 @@ export function calculateQuote(
         subtotal,
         tax,
         total,
-        pricePerM2,
-        currency: 'MXN',
+        pricePerUnit: finalUnitPrice,
+        currency: '$',
         breakdown: {
-            glassM2: metrics.totalArea,
-            glassUnitPrice: pricePerM2,
+            area: +areaSqFt.toFixed(2),
+            areaUnit: 'sqft',
+            unitPrice: finalUnitPrice,
             laborHours,
-            laborHourRate: laborRate,
         },
     };
 }

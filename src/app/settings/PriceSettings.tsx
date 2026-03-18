@@ -33,18 +33,18 @@ export function PriceSettings() {
         } else {
             // Valores por defecto
             setPrices({
-                glassClear: 450,
-                glassExtra: 750,
-                glassColor: 550,
-                hwBisagra: 250,
-                hwJalon: 180,
-                hwRiel: 650,
-                hwClip: 80,
-                hwSellador: 85,
-                installationBase: 1500,
-                laborRate: 280,
-                taxRate: 16,
-                profitMargin: 35, // Porcentaje
+                glassClear: 12,
+                glassExtra: 18,
+                glassColor: 15,
+                hwBisagra: 80,
+                hwJalon: 65,
+                hwRiel: 120,
+                hwClip: 25,
+                hwSellador: 15,
+                installationBase: 250,
+                laborRate: 45,
+                taxRate: 7,
+                profitMargin: 30,
             });
         }
     }, []);

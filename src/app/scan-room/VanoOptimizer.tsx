@@ -3,6 +3,7 @@ import { useProject } from '../../store/projectStore';
 import { ARScannerModal } from './ARScannerModal';
 import { GlassType, GlassThickness, ShowerConfig } from '../../backend/pricing-engine/glassCalculator';
 import { SafetyAlert } from '../../backend/pricing-engine/safetyValidator';
+import { RoomDesigner2D } from './RoomDesigner2D';
 
 function ShowerTypeIcon({ id }: { id: GlassType }) {
     const stroke = 'currentColor';
@@ -164,8 +165,8 @@ export function VanoOptimizer() {
             <div className="module__header">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
                     <div>
-                        <h2 className="module__title">📐 Configuración de Diseño</h2>
-                        <p className="module__subtitle">Define el hueco y la plantilla de la ducha para ver el despiece exacto.</p>
+                        <h2 className="module__title">📐 GlassPlan Pro — Diseñador</h2>
+                        <p className="module__subtitle">Define el hueco y la ubicación exacta en el espacio 2D/3D.</p>
                     </div>
                     <button className="btn-ar-trigger" onClick={() => setShowAR(true)} style={{ background: 'var(--brand-blue)', color: 'white', border: 'none', padding: '12px 20px', borderRadius: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
                         📸 Scan Bathroom AI
@@ -333,6 +334,9 @@ export function VanoOptimizer() {
                         </div>
                     </div>
                 </section>
+
+                {/* Diseñador 2D con Konva */}
+                <RoomDesigner2D />
 
                 {/* Alertas */}
                 {alerts.length > 0 && (

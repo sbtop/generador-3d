@@ -92,28 +92,28 @@ export function StyleConfigurator() {
                         <h3 className="section__title">💰 Desglose de Costos</h3>
                         <div className="cost-breakdown">
                             <div className="cost-row">
-                                <span>Vidrio ({state.metrics.totalArea} m² × ${state.quote.pricePerM2}/m²)</span>
-                                <span>${state.quote.glassCost.toLocaleString('es-MX')}</span>
+                                <span>Vidrio ({state.quote.breakdown.area} {state.quote.breakdown.areaUnit} × ${state.quote.pricePerUnit}/{state.quote.breakdown.areaUnit})</span>
+                                <span>${state.quote.glassCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                             </div>
                             <div className="cost-row">
                                 <span>Herrajes</span>
-                                <span>${state.quote.hardwareCost.toLocaleString('es-MX')}</span>
+                                <span>${state.quote.hardwareCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                             </div>
                             <div className="cost-row">
                                 <span>Mano de Obra ({state.quote.breakdown.laborHours}h)</span>
-                                <span>${state.quote.laborCost.toLocaleString('es-MX')}</span>
+                                <span>${state.quote.laborCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                             </div>
                             <div className="cost-row cost-row--sub">
                                 <span>Subtotal</span>
-                                <span>${state.quote.subtotal.toLocaleString('es-MX')}</span>
+                                <span>${state.quote.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                             </div>
                             <div className="cost-row">
-                                <span>IVA (16%)</span>
-                                <span>${state.quote.tax.toLocaleString('es-MX')}</span>
+                                <span>Impuesto ({state.pricingConfig.taxRate}%)</span>
+                                <span>${state.quote.tax.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                             </div>
                             <div className="cost-row cost-row--total">
                                 <span>TOTAL</span>
-                                <span>${state.quote.total.toLocaleString('es-MX')}</span>
+                                <span>${state.quote.total.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                             </div>
                         </div>
                     </section>
