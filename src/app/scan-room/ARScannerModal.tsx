@@ -21,6 +21,7 @@ export function ARScannerModal({ onComplete, onClose }: { onComplete: (w: number
     const [markers, setMarkers] = useState<DetectionMarker[]>([]);
     const [progress, setProgress] = useState(0);
     const [activeConfig, setActiveConfig] = useState<ShowerConfig>('single');
+    const [scanResult, setScanResult] = useState({ w: 950, h: 1900 });
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -75,19 +76,22 @@ export function ARScannerModal({ onComplete, onClose }: { onComplete: (w: number
         }
 
         if (step === 2) {
-            const timer = setTimeout(() => setStep(3), 2000);
+            const timer = setTimeout(() => {
+                // Randomize results for "Realness"
+                const rw = Math.floor(850 + Math.random() * 300);
+                const rh = Math.floor(1850 + Math.random() * 200);
+                setScanResult({ w: rw, h: rh });
+                setStep(3);
+            }, 2000);
             return () => clearTimeout(timer);
         }
     }, [step, markers.length]);
 
     const handleConfirm = () => {
-        // Automatic high-precision mock values
-        const mockW = 950;
-        const mockH = 1900;
-        onComplete(mockW, mockH, activeConfig);
+        onComplete(scanResult.w, scanResult.h, activeConfig);
     };
 
-    const metrics = calculateGlass('batiente', 950, 1900, 8, activeConfig);
+    const metrics = calculateGlass('batiente', scanResult.w, scanResult.h, 8, activeConfig);
 
     return (
         <div className="ar-modal">
@@ -115,7 +119,7 @@ export function ARScannerModal({ onComplete, onClose }: { onComplete: (w: number
                     </div>
                 )}
 
-                {/* AI / LiDAR Layer (only in scanning phases) */}
+                {/* AI / HUD Layer */}
                 {step < 3 && (
                     <div className="ar-modal__ui">
                         <div className="ar-modal__header">
@@ -153,12 +157,16 @@ export function ARScannerModal({ onComplete, onClose }: { onComplete: (w: number
                     </div>
                 )}
 
-                {/* Success and Explorer UI */}
+                {/* Results and Explorer */}
                 {(step === 3 || step === 4) && (
                     <div className="ar-modal__ui ar-modal__ui--overlay">
-                        <div className="ar-modal__header" style={{ background: step === 4 ? 'rgba(15, 23, 42, 0.8)' : 'transparent', padding: '15px' }}>
+                        <div className="ar-modal__header" style={{
+                            background: step === 4 ? 'rgba(15, 23, 42, 0.9)' : 'transparent',
+                            padding: '20px',
+                            borderBottom: step === 4 ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                        }}>
                             <button className="ar-btn-close" onClick={onClose} style={{ color: step === 4 ? 'white' : 'var(--text-primary)' }}>✕</button>
-                            <div className="ar-modal__title" style={{ color: step === 4 ? 'white' : 'var(--text-primary)', textShadow: step === 4 ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>
+                            <div className="ar-modal__title" style={{ color: step === 4 ? 'white' : 'var(--text-primary)' }}>
                                 {step === 3 ? 'Escaneo Exitoso' : '📏 Explorar Modelos 3D'}
                             </div>
                         </div>
@@ -168,9 +176,9 @@ export function ARScannerModal({ onComplete, onClose }: { onComplete: (w: number
                                 <div className="ar-results-badge">IA DETECTED</div>
                                 <h4 className="ar-results-title">Vano Detectado</h4>
                                 <div className="ar-results-grid">
-                                    <div className="ar-result-item"><span>Ancho</span><strong>950 mm</strong></div>
-                                    <div className="ar-result-item"><span>Alto</span><strong>1900 mm</strong></div>
-                                    <div className="ar-result-item"><span>Precisión</span><strong style={{ color: '#10b981' }}>99%</strong></div>
+                                    <div className="ar-result-item"><span>Ancho</span><strong>{scanResult.w} mm</strong></div>
+                                    <div className="ar-result-item"><span>Alto</span><strong>{scanResult.h} mm</strong></div>
+                                    <div className="ar-result-item"><span>Precisión</span><strong style={{ color: '#10b981' }}>99.2%</strong></div>
                                 </div>
                                 <button className="ar-btn-confirm" onClick={() => setStep(4)}>
                                     Ver en Modo SketchUp
@@ -210,6 +218,22 @@ export function ARScannerModal({ onComplete, onClose }: { onComplete: (w: number
             </div>
 
             <style>{`
+                .ar-modal__content {
+                    min-height: 100dvh;
+                }
+                .ar-sketchup-preview {
+                    position: absolute;
+                    inset: 0;
+                    background: #f1f5f9;
+                    z-index: 1;
+                }
+                .ar-modal__ui--overlay {
+                    background: transparent;
+                    pointer-events: none;
+                }
+                .ar-modal__ui--overlay > * {
+                    pointer-events: auto;
+                }
                 .ar-sketchup-badge {
                     position: absolute;
                     top: 80px;

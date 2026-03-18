@@ -205,7 +205,7 @@ export function GlassScene({
     return (
         <div style={{ width: '100%', height: '100%', minHeight: '420px', background: 'transparent', borderRadius: '12px', overflow: 'hidden', border: showContext ? '1px solid var(--panel-border)' : 'none' }}>
             <Canvas shadows gl={{ antialias: true, preserveDrawingBuffer: true }}>
-                <PerspectiveCamera makeDefault position={showContext ? [1.5, 1.8, 3.5] : [0, 0.8, 4.2]} fov={showContext ? 45 : 35} />
+                <PerspectiveCamera makeDefault position={showContext ? [1.5, 1.5, 3.5] : [0, 0.8, 4.2]} fov={showContext ? 45 : 35} />
                 <OrbitControls
                     makeDefault
                     minPolarAngle={0}
@@ -213,12 +213,12 @@ export function GlassScene({
                     minDistance={1.2}
                     maxDistance={10}
                     enablePan={showContext}
-                    target={[0, showContext ? 1.2 : 0.8, 0]}
+                    target={[0, showContext ? 0.9 : 0.8, 0]}
                 />
 
-                <ambientLight intensity={showContext ? 0.8 : 0.6} />
-                <directionalLight position={[5, 10, 5]} intensity={1.5} castShadow />
-                <spotLight position={[-5, 5, 5]} angle={0.3} penumbra={1} intensity={1} castShadow />
+                <ambientLight intensity={showContext ? 0.7 : 0.6} />
+                <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow />
+                <spotLight position={[-5, 5, 5]} angle={0.3} penumbra={1} intensity={0.8} castShadow />
 
                 {showContext && <BathroomEnvironment width={totalW} />}
 
