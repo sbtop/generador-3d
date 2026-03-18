@@ -161,21 +161,34 @@ export function VanoOptimizer() {
 
     return (
         <div className="module">
-            {showAR && (
-                <ARScannerModal
-                    onClose={() => setShowAR(false)}
-                    onComplete={(w, h) => {
-                        dispatch({ type: 'SET_VANO', payload: { vanoWidth: w, vanoHeight: h } });
-                        setShowAR(false);
-                    }}
-                />
-            )}
             <div className="module__header">
-                <h2 className="module__title">📐 Configuración de Diseño</h2>
-                <p className="module__subtitle">Define el hueco y la plantilla de la ducha para ver el despiece exacto.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                    <div>
+                        <h2 className="module__title">📐 Configuración de Diseño</h2>
+                        <p className="module__subtitle">Define el hueco y la plantilla de la ducha para ver el despiece exacto.</p>
+                    </div>
+                    <button className="btn-ar-trigger" onClick={() => setShowAR(true)} style={{ background: 'var(--brand-blue)', color: 'white', border: 'none', padding: '12px 20px', borderRadius: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
+                        📸 Scan Bathroom AI
+                    </button>
+                </div>
             </div>
 
             <div className="module__body">
+                {showAR && (
+                    <ARScannerModal
+                        onClose={() => setShowAR(false)}
+                        onComplete={(w, h) => {
+                            dispatch({ type: 'SET_VANO', payload: { vanoWidth: w, vanoHeight: h } });
+                            // Suggest template based on width
+                            if (w > 1000) {
+                                dispatch({ type: 'SET_SHOWER_CONFIG', payload: 'door-panel' });
+                            } else {
+                                dispatch({ type: 'SET_SHOWER_CONFIG', payload: 'single' });
+                            }
+                            setShowAR(false);
+                        }}
+                    />
+                )}
                 {/* Tipo de vano */}
                 <section className="section">
                     <h3 className="section__title">1. Tipo de Instalación</h3>
@@ -326,6 +339,6 @@ export function VanoOptimizer() {
                     </section>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
