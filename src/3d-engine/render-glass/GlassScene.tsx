@@ -33,28 +33,28 @@ interface PanelMeshProps {
 function BathroomEnvironment({ width }: { width: number }) {
     return (
         <group position-y={0}>
-            {/* Piso con textura suave */}
+            {/* Piso con tono gris cálido / cemento pulido */}
             <mesh rotation-x={-Math.PI / 2} receiveShadow position-y={-0.001}>
                 <planeGeometry args={[20, 20]} />
-                <meshStandardMaterial color="#f8fafc" roughness={0.9} metalness={0.1} />
+                <meshStandardMaterial color="#cbd5e1" roughness={0.7} metalness={0.1} />
             </mesh>
 
-            {/* Pared Trasera (Hueco) */}
+            {/* Pared Trasera (Hueco) - Más oscura para contraste */}
             <mesh position={[0, 1.5, -0.05]} receiveShadow>
                 <boxGeometry args={[width + 4, 3, 0.1]} />
-                <meshStandardMaterial color="#f1f5f9" roughness={1} />
+                <meshStandardMaterial color="#94a3b8" roughness={1} />
             </mesh>
 
             {/* Mocheta Izquierda */}
             <mesh position={[-width / 2 - 0.55, 1.5, 0.5]} receiveShadow>
                 <boxGeometry args={[1, 3, 1.2]} />
-                <meshStandardMaterial color="#e2e8f0" />
+                <meshStandardMaterial color="#64748b" />
             </mesh>
 
             {/* Mocheta Derecha */}
             <mesh position={[width / 2 + 0.55, 1.5, 0.5]} receiveShadow>
                 <boxGeometry args={[1, 3, 1.2]} />
-                <meshStandardMaterial color="#e2e8f0" />
+                <meshStandardMaterial color="#64748b" />
             </mesh>
 
             {/* Techo */}
