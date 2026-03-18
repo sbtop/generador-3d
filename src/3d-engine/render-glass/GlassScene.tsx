@@ -13,6 +13,8 @@ interface GlassSceneProps {
     interactive?: boolean;
     isOpen?: boolean;
     glassType?: GlassType;
+    showContext?: boolean;
+    showMeasurements?: boolean;
 }
 
 interface PanelMeshProps {
@@ -25,9 +27,46 @@ interface PanelMeshProps {
     isMovable: boolean;
     isOpen: boolean;
     glassType: GlassType;
+    showMeasurements: boolean;
 }
 
-function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, hardwareMetalness, isMovable, isOpen, glassType }: PanelMeshProps) {
+function BathroomEnvironment({ width }: { width: number }) {
+    return (
+        <group position-y={0}>
+            {/* Piso con textura suave */}
+            <mesh rotation-x={-Math.PI / 2} receiveShadow position-y={-0.001}>
+                <planeGeometry args={[20, 20]} />
+                <meshStandardMaterial color="#f8fafc" roughness={0.9} metalness={0.1} />
+            </mesh>
+
+            {/* Pared Trasera (Hueco) */}
+            <mesh position={[0, 1.5, -0.05]} receiveShadow>
+                <boxGeometry args={[width + 4, 3, 0.1]} />
+                <meshStandardMaterial color="#f1f5f9" roughness={1} />
+            </mesh>
+
+            {/* Mocheta Izquierda */}
+            <mesh position={[-width / 2 - 0.55, 1.5, 0.5]} receiveShadow>
+                <boxGeometry args={[1, 3, 1.2]} />
+                <meshStandardMaterial color="#e2e8f0" />
+            </mesh>
+
+            {/* Mocheta Derecha */}
+            <mesh position={[width / 2 + 0.55, 1.5, 0.5]} receiveShadow>
+                <boxGeometry args={[1, 3, 1.2]} />
+                <meshStandardMaterial color="#e2e8f0" />
+            </mesh>
+
+            {/* Techo */}
+            <mesh position={[0, 3, 0.5]} receiveShadow>
+                <boxGeometry args={[width + 4, 0.1, 1.2]} />
+                <meshStandardMaterial color="#f8fafc" />
+            </mesh>
+        </group>
+    );
+}
+
+function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, hardwareMetalness, isMovable, isOpen, glassType, showMeasurements }: PanelMeshProps) {
     const w = panel.glassWidth / 1000;
     const h = panel.glassHeight / 1000;
     const t = 0.01;
@@ -56,41 +95,45 @@ function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, ha
                         transparent
                         opacity={glassOpacity}
                         roughness={0.05}
-                        metalness={0.05}
-                        transmission={0.88}
-                        thickness={1.2}
-                        envMapIntensity={1.2}
-                        ior={1.5}
+                        metalness={0.15}
+                        transmission={0.92}
+                        thickness={1.5}
+                        envMapIntensity={1.5}
+                        ior={1.52}
                     />
                 </mesh>
 
                 <mesh>
-                    <boxGeometry args={[w + 0.004, h + 0.004, t + 0.002]} />
-                    <meshBasicMaterial color="#22d3ee" wireframe opacity={0.12} transparent />
+                    <boxGeometry args={[w + 0.002, h + 0.002, t + 0.001]} />
+                    <meshBasicMaterial color="#38bdf8" wireframe opacity={0.1} transparent />
                 </mesh>
 
-                <Text
-                    position={[0, h / 2 + 0.09, 0]}
-                    fontSize={0.07}
-                    color="#22d3ee"
-                    anchorX="center"
-                    anchorY="bottom"
-                    fontWeight={700}
-                >
-                    {panel.glassWidth}mm
-                </Text>
+                {showMeasurements && (
+                    <>
+                        <Text
+                            position={[0, h / 2 + 0.09, 0]}
+                            fontSize={0.07}
+                            color="#38bdf8"
+                            anchorX="center"
+                            anchorY="bottom"
+                            fontWeight={700}
+                        >
+                            {panel.glassWidth}mm
+                        </Text>
 
-                <Text
-                    position={[w / 2 + 0.09, 0, 0]}
-                    fontSize={0.07}
-                    color="#22d3ee"
-                    rotation={[0, 0, -Math.PI / 2]}
-                    anchorX="center"
-                    anchorY="middle"
-                    fontWeight={700}
-                >
-                    {panel.glassHeight}mm
-                </Text>
+                        <Text
+                            position={[w / 2 + 0.09, 0, 0]}
+                            fontSize={0.07}
+                            color="#38bdf8"
+                            rotation={[0, 0, -Math.PI / 2]}
+                            anchorX="center"
+                            anchorY="middle"
+                            fontWeight={700}
+                        >
+                            {panel.glassHeight}mm
+                        </Text>
+                    </>
+                )}
 
                 {/* Herrajes */}
                 {panel.barrenos
@@ -98,7 +141,7 @@ function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, ha
                     .map((b: any, i: number) => (
                         <mesh key={i} position={[-w / 2 - 0.015, b.y / 1000 - h / 2, 0.025]}>
                             <cylinderGeometry args={[0.012, 0.012, 0.06, 12]} />
-                            <meshStandardMaterial color={hardwareColor} metalness={hardwareMetalness} roughness={0.15} />
+                            <meshStandardMaterial color={hardwareColor} metalness={hardwareMetalness} roughness={0.1} />
                         </mesh>
                     ))
                 }
@@ -108,7 +151,7 @@ function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, ha
                     .map((b: any, i: number) => (
                         <mesh key={i} position={[b.x / 1000 - w / 2, b.y / 1000 - h / 2, t / 2 + 0.015]}>
                             <cylinderGeometry args={[0.008, 0.008, 0.12, 8]} />
-                            <meshStandardMaterial color={hardwareColor} metalness={hardwareMetalness} roughness={0.12} />
+                            <meshStandardMaterial color={hardwareColor} metalness={hardwareMetalness} roughness={0.05} />
                         </mesh>
                     ))
                 }
@@ -128,7 +171,18 @@ function PanelMesh({ panel, offsetX, glassColor, glassOpacity, hardwareColor, ha
     );
 }
 
-export function GlassScene({ panels, glassColor, glassOpacity, hardwareColor, hardwareMetalness, interactive = false, isOpen = false, glassType = 'batiente' }: GlassSceneProps) {
+export function GlassScene({
+    panels,
+    glassColor,
+    glassOpacity,
+    hardwareColor,
+    hardwareMetalness,
+    interactive = false,
+    isOpen = false,
+    glassType = 'batiente',
+    showContext = false,
+    showMeasurements = true
+}: GlassSceneProps) {
     // En corredizas, el primer panel es fijo, el segundo (si hay) móvil.
     // Para batientes, buscamos el que diga "Puerta" en el label
     const isMovableIndex = (mode: GlassType, index: number, label: string) => {
@@ -149,24 +203,24 @@ export function GlassScene({ panels, glassColor, glassOpacity, hardwareColor, ha
     };
 
     return (
-        <div style={{ width: '100%', height: '100%', minHeight: '420px', background: 'transparent', borderRadius: '12px', overflow: 'hidden' }}>
-            <Canvas shadows gl={{ antialias: true }}>
-                <PerspectiveCamera makeDefault position={[0, 0.8, 4.2]} fov={35} />
+        <div style={{ width: '100%', height: '100%', minHeight: '420px', background: 'transparent', borderRadius: '12px', overflow: 'hidden', border: showContext ? '1px solid var(--panel-border)' : 'none' }}>
+            <Canvas shadows gl={{ antialias: true, preserveDrawingBuffer: true }}>
+                <PerspectiveCamera makeDefault position={showContext ? [1.5, 1.8, 3.5] : [0, 0.8, 4.2]} fov={showContext ? 45 : 35} />
                 <OrbitControls
                     makeDefault
                     minPolarAngle={0}
                     maxPolarAngle={Math.PI / 1.8}
-                    minDistance={1.8}
-                    maxDistance={8}
-                    enablePan={false}
-                    target={[0, 0.8, 0]}
+                    minDistance={1.2}
+                    maxDistance={10}
+                    enablePan={showContext}
+                    target={[0, showContext ? 1.2 : 0.8, 0]}
                 />
 
-                <ambientLight intensity={0.6} />
-                <directionalLight position={[5, 8, 5]} intensity={1.2} castShadow />
-                <pointLight position={[-4, 4, 4]} intensity={0.8} color="#60a5fa" />
-                <pointLight position={[4, 2, -4]} intensity={0.5} color="#a78bfa" />
-                <spotLight position={[0, 8, 0]} angle={0.4} penumbra={0.5} intensity={0.8} castShadow color="#ffffff" />
+                <ambientLight intensity={showContext ? 0.8 : 0.6} />
+                <directionalLight position={[5, 10, 5]} intensity={1.5} castShadow />
+                <spotLight position={[-5, 5, 5]} angle={0.3} penumbra={1} intensity={1} castShadow />
+
+                {showContext && <BathroomEnvironment width={totalW} />}
 
                 {panels.map((panel, i) => (
                     <PanelMesh
@@ -180,12 +234,13 @@ export function GlassScene({ panels, glassColor, glassOpacity, hardwareColor, ha
                         isMovable={interactive && isMovableIndex(glassType, i, panel.label)}
                         isOpen={isOpen}
                         glassType={glassType}
+                        showMeasurements={showMeasurements}
                     />
                 ))}
 
-                <ContactShadows resolution={1024} scale={6} blur={2.5} opacity={0.5} far={2} color="#000000" />
-                <Grid args={[12, 12]} position={[0, 0, 0]} cellColor="#1e3a5f" sectionColor="#162535" fadeDistance={10} fadeStrength={1} />
-                <Environment preset="city" />
+                <ContactShadows resolution={1024} scale={10} blur={2.5} opacity={0.6} far={5} color="#000000" />
+                {!showContext && <Grid args={[12, 12]} position={[0, 0, 0]} cellColor="#1e3a5f" sectionColor="#162535" fadeDistance={10} fadeStrength={1} />}
+                <Environment preset="apartment" />
             </Canvas>
         </div>
     );

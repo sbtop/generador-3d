@@ -177,13 +177,18 @@ export function VanoOptimizer() {
                 {showAR && (
                     <ARScannerModal
                         onClose={() => setShowAR(false)}
-                        onComplete={(w, h) => {
+                        onComplete={(w, h, config) => {
                             dispatch({ type: 'SET_VANO', payload: { vanoWidth: w, vanoHeight: h } });
-                            // Suggest template based on width
-                            if (w > 1000) {
-                                dispatch({ type: 'SET_SHOWER_CONFIG', payload: 'door-panel' });
+
+                            if (config) {
+                                dispatch({ type: 'SET_SHOWER_CONFIG', payload: config });
                             } else {
-                                dispatch({ type: 'SET_SHOWER_CONFIG', payload: 'single' });
+                                // Fallback logic if config not provided
+                                if (w > 1000) {
+                                    dispatch({ type: 'SET_SHOWER_CONFIG', payload: 'door-panel' });
+                                } else {
+                                    dispatch({ type: 'SET_SHOWER_CONFIG', payload: 'single' });
+                                }
                             }
                             setShowAR(false);
                         }}
